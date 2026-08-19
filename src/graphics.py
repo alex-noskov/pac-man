@@ -76,7 +76,7 @@ class Graphics:
         spacing: int = 1
     ) -> None:
         char_width = 5
-        char_height = 7
+        char_height = 8
 
         char_width *= scale
         char_height *= scale
@@ -84,7 +84,7 @@ class Graphics:
 
         image_width = len(text) * (char_width + spacing) - spacing
         image = self.create_image(width=image_width, height=char_height)
-        for char_index, char in enumerate(text.upper()):
+        for char_index, char in enumerate(text):
             bitmap = FONT_MAP.get(char)
             if bitmap is None:
                 continue
@@ -101,6 +101,10 @@ class Graphics:
                                 color=color,
                             )
         self.put_image(image=image, x=x, y=y)
+
+    def get_window_size(self) -> tuple[int, int]:
+        """Return the current window width and height."""
+        return self.window.get_size()
 
     def refresh(self) -> None:
         pygame.display.flip()
