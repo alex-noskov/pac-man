@@ -1,5 +1,5 @@
 import pygame
-from .colors import TRANSPARENT
+from .colors import TRANSPARENT, BLACK
 from .font_map import FONT_MAP
 
 
@@ -33,13 +33,14 @@ class Graphics:
     def create_image(self, width: int, height: int) -> Image:
         return Image(width=width, height=height)
 
-    def put_image(self, image: Image, x: int, y: int) -> None:
+    def put_image(self, image: Image, x: int, y: int,
+                  background_color: int = BLACK) -> None:
         surface = pygame.Surface((image.width, image.height))
         for iy in range(image.height):
             for ix in range(image.width):
                 color = image.matrix[iy][ix]
                 if color == TRANSPARENT:
-                    continue
+                    color = background_color
                 r = (color >> 16) & 0xFF
                 g = (color >> 8) & 0xFF
                 b = color & 0xFF
@@ -72,15 +73,15 @@ class Graphics:
         x: int,
         y: int,
         color: int,
-        scale: int = 1,
-        spacing: int = 1
+        background_color: int,
+        spacing: int = 1,
+        scale: int = 1
     ) -> None:
         char_width = 5
         char_height = 8
 
         char_width *= scale
         char_height *= scale
-        spacing *= scale
 
         image_width = len(text) * (char_width + spacing) - spacing
         image = self.create_image(width=image_width, height=char_height)
@@ -100,7 +101,8 @@ class Graphics:
                                 y=iy * scale + dy,
                                 color=color,
                             )
-        self.put_image(image=image, x=x, y=y)
+        self.put_image(image=image, x=x, y=y,
+                       background_color=background_color)
 
     def get_window_size(self) -> tuple[int, int]:
         """Return the current window width and height."""
