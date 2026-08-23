@@ -5,6 +5,7 @@ description = "42 school pacman game"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
+    "mlx",
     "mazegenerator",
     "pydantic>=2.13.4",
     "pygame==2.6.1",
@@ -12,3 +13,4 @@ dependencies = [
 
 [tool.uv.sources]
 mazegenerator = { path = "mazegenerator-2.1.0-py3-none-any.whl" }
+mlx = { path = "mlx-2.2-py3-none-any.whl"}

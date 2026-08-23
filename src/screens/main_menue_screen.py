@@ -1,9 +1,18 @@
 import pygame
+import time
 from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
-from ..colors import YELLOW, BLACK, GREEN, WHITE
+# from ..mlx_graphics import MlxGraphics
+from ..colors import YELLOW, BLACK, BLUE, PURPLE, ORANGE
 from ..ui import Layout, AbsoluteRect
+
+
+BACKGROUND_COLOR = BLACK
+DEF_RECT_COLOR = YELLOW
+DEF_TEXT_COLOR = BLUE
+REV_RECT_COLOR = PURPLE
+REV_TEXT_COLOR = ORANGE
 
 
 class MainMenuScreen(Screen):
@@ -13,63 +22,50 @@ class MainMenuScreen(Screen):
         self.graphics = graphics
         self.layout = Layout()
         self._self_app_state = AppState.MAIN_MENU
-        self._backgroung_color = BLACK
         sizes = self.graphics.get_window_size()
         self._width: int = sizes[0]
         self._height: int = sizes[1]
         self._cache: dict[str, AbsoluteRect] = {}
+        self._hovered_rect: str | None = None
         self._gen_layout()
         self._cache_abs_layout()
 
+    def _set_rect_colors(self, name: str, hovered: bool) -> None:
+        rect = self._cache.get(name)
+        if rect is None:
+            return
+        if hovered:
+            rect.color = REV_RECT_COLOR
+            text_color = REV_TEXT_COLOR
+        else:
+            rect.color = DEF_RECT_COLOR
+            text_color = DEF_TEXT_COLOR
+        if rect.text is not None:
+            rect.text.color = text_color
+
     def handle_event(self, event: pygame.event.Event) -> AppState:
         """Handle an input event."""
-        if event is not None:
-            if event.type == pygame.QUIT:
-                print(event)
-                return AppState.EXIT
-            if event.type == pygame.MOUSEMOTION:
-                if event.pos is not None:
-                    if self._cache["PLAY"].contains(event.pos[0],
-                                                    event.pos[1]):
-                        self._cache["PLAY"].color = GREEN
-                        self._cache["PLAY_TEXT"].color = GREEN
-                        if self._cache["PLAY_TEXT"].text is not None:
-                            self._cache["PLAY_TEXT"].text.color = WHITE
-                    elif self._cache["HIGHSCORE"].contains(event.pos[0],
-                                                           event.pos[1]):
-                        self._cache["HIGHSCORE"].color = GREEN
-                        self._cache["HIGHSCORE_TEXT"].color = GREEN
-                        if self._cache["HIGHSCORE_TEXT"].text is not None:
-                            self._cache["HIGHSCORE_TEXT"].text.color = WHITE
-                    elif self._cache["INSTRUCTIONS"].contains(event.pos[0],
-                                                              event.pos[1]):
-                        self._cache["INSTRUCTIONS"].color = GREEN
-                        self._cache["INSTRUCTIONS_TEXT"].color = GREEN
-                        if self._cache["INSTRUCTIONS_TEXT"].text is not None:
-                            self._cache["INSTRUCTIONS_TEXT"].text.color = WHITE
-                    elif self._cache["EXIT"].contains(event.pos[0],
-                                                      event.pos[1]):
-                        self._cache["EXIT"].color = GREEN
-                        self._cache["EXIT_TEXT"].color = GREEN
-                        if self._cache["EXIT_TEXT"].text is not None:
-                            self._cache["EXIT_TEXT"].text.color = WHITE
-                    else:
-                        self._cache["PLAY"].color = YELLOW
-                        self._cache["PLAY_TEXT"].color = YELLOW
-                        if self._cache["PLAY_TEXT"].text is not None:
-                            self._cache["PLAY_TEXT"].text.color = BLACK
-                        self._cache["HIGHSCORE"].color = YELLOW
-                        self._cache["HIGHSCORE_TEXT"].color = YELLOW
-                        if self._cache["HIGHSCORE_TEXT"].text is not None:
-                            self._cache["HIGHSCORE_TEXT"].text.color = BLACK
-                        self._cache["INSTRUCTIONS"].color = YELLOW
-                        self._cache["INSTRUCTIONS_TEXT"].color = YELLOW
-                        if self._cache["INSTRUCTIONS_TEXT"].text is not None:
-                            self._cache["INSTRUCTIONS_TEXT"].text.color = BLACK
-                        self._cache["EXIT"].color = YELLOW
-                        self._cache["EXIT_TEXT"].color = YELLOW
-                        if self._cache["EXIT_TEXT"].text is not None:
-                            self._cache["EXIT_TEXT"].text.color = BLACK
+        if event.type == pygame.QUIT:
+            print(event)
+            return AppState.EXIT
+        if event.type == pygame.MOUSEMOTION:
+            hovered_rect = None
+            for abs_rect in self._cache.values():
+                if abs_rect.contains(event.pos[0], event.pos[1]):
+                    hovered_rect = abs_rect.name
+                    break
+            if hovered_rect != self._hovered_rect:
+                if self._hovered_rect is not None:
+                    self._set_rect_colors(
+                        self._hovered_rect,
+                        hovered=False
+                    )
+                if hovered_rect is not None:
+                    self._set_rect_colors(
+                        hovered_rect,
+                        hovered=True
+                    )
+                self._hovered_rect = hovered_rect
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -81,53 +77,48 @@ class MainMenuScreen(Screen):
 
     def _gen_layout(self) -> None:
         self.layout.add_rect(xp=0, yp=15, widthp=25,
-                             heightp=10, name="PLAY")
-        self.layout.add_rect(xp=0, yp=18, widthp=25,
-                             heightp=4, name="PLAY_TEXT",
-                             text="PLAY")
+                             heightp=10, name="PLAY", text="PLAY",
+                             x_offsetp=5, x_offsetp_rev=5)
         self.layout.center_rect_x("PLAY")
-        self.layout.center_rect_x("PLAY_TEXT")
         # print(self.layout.get_rect_absolute("PLAY_TEXT",
         #      width=self._width, height=self._height).text.scale)
         self.layout.add_rect(xp=0, yp=30, widthp=25,
-                             heightp=10, name="HIGHSCORE")
-        self.layout.add_rect(xp=0, yp=33, widthp=25,
-                             heightp=4, name="HIGHSCORE_TEXT",
-                             text="HIGHSCORE")
+                             heightp=10, name="HIGHSCORE", text="HIGHSCORE",
+                             x_offsetp=5, x_offsetp_rev=5)
         self.layout.center_rect_x("HIGHSCORE")
-        self.layout.center_rect_x("HIGHSCORE_TEXT")
-        # print(self.layout.get_rect_absolute("HIGHSCORE_TEXT",
-        #      width=self._width, height=self._height).text.scale)
         self.layout.add_rect(xp=0, yp=45, widthp=25,
-                             heightp=10, name="INSTRUCTIONS")
-        self.layout.add_rect(xp=0, yp=48, widthp=25,
-                             heightp=4, name="INSTRUCTIONS_TEXT",
-                             text="INSTRUCTIONS")
+                             heightp=10, name="INSTRUCTIONS",
+                             text="INSTRUCTIONS", x_offsetp=5, x_offsetp_rev=5)
         self.layout.center_rect_x("INSTRUCTIONS")
-        self.layout.center_rect_x("INSTRUCTIONS_TEXT")
+        abs_instructions = self.layout.get_rect_absolute("INSTRUCTIONS",
+                                                         width=self._width,
+                                                         height=self._height)
+        if abs_instructions is not None and abs_instructions.text is not None:
+            self._menu_scale = abs_instructions.text.scale
+        print("MAIN MENUE SCALE:", self._menu_scale)
         # print(self.layout.get_rect_absolute("INSTRUCTIONS_TEXT",
         #      width=self._width, height=self._height).text.scale)
         self.layout.add_rect(xp=0, yp=60, widthp=25,
-                             heightp=10, name="EXIT")
-        self.layout.add_rect(xp=0, yp=63, widthp=25,
-                             heightp=4, name="EXIT_TEXT",
-                             text="EXIT")
+                             heightp=10, name="EXIT", text="EXIT",
+                             x_offsetp=5, x_offsetp_rev=5)
         self.layout.center_rect_x("EXIT")
-        self.layout.center_rect_x("EXIT_TEXT")
         # print(self.layout.get_rect_absolute("EXIT_TEXT",
         #      width=self._width, height=self._height).text.scale)
 
     def _cache_abs_layout(self) -> None:
         for abs_rect in self.layout.get_all_rects_absolute(self._width,
-                                                           self._height):
-            abs_rect.color = YELLOW
+                                                           self._height,
+                                                           self._menu_scale):
+            abs_rect.color = DEF_RECT_COLOR
             if abs_rect.text is not None:
-                abs_rect.text.color = BLACK
+                abs_rect.text.color = DEF_TEXT_COLOR
             self._cache[abs_rect.name] = abs_rect
 
     def render(self) -> AppState:
         """Render the screen."""
-        self.graphics.clear(self._backgroung_color)
+        t = time.perf_counter()
+        self.graphics.clear(BACKGROUND_COLOR)
+        t1 = time.perf_counter()
         for abs_rect in self._cache.values():
             self.graphics.draw_rectangle(
                 x=abs_rect.x,
@@ -146,6 +137,13 @@ class MainMenuScreen(Screen):
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
+        t2 = time.perf_counter()
         # self.graphics.draw_text("NADPIS", 100, 100, YELLOW, scale=10)
         self.graphics.refresh()
+        t3 = time.perf_counter()
+        print(
+            f"clear={t1-t:.6f} "
+            f"draw={t2-t1:.6f} "
+            f"refresh={t3-t2:.6f}"
+        )
         return self._self_app_state

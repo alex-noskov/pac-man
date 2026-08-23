@@ -32,4 +32,4 @@ prompt:
 	ls -R >> prompt.txt
 	xclip -selection clipboard < prompt.txt
 
-.PHONY: run install lint lint-strict debug clean prompt
+.PHONY: run install lint lint-strict debug clean prompt prompt_mlx

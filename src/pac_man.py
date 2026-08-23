@@ -1,12 +1,13 @@
 import sys
-import time
+# import time
 from src.parsing import parse, Config
 from .models import AppState
 from .screens import (MainMenuScreen, InstructionsScreen,
                       HighscoresScreen, ExitScreen, Screen)
 from .graphics import Graphics
-
-FRAME_TIME = 1 / 60
+# from .mlx_graphics import MlxGraphics
+# FPS = 60
+# FRAME_TIME = 1 / FPS
 
 
 class PacMan:
@@ -17,6 +18,9 @@ class PacMan:
         self.graphics = Graphics(
             width=self.config.window_width,
             height=self.config.window_height)
+        # self.mlx_graphics = MlxGraphics(
+        #    width=self.config.window_width,
+        #    height=self.config.window_height)
 
         self.screens: dict[AppState, Screen] = {
             AppState.MAIN_MENU: MainMenuScreen(self.graphics),
@@ -32,8 +36,9 @@ class PacMan:
     def start(self) -> None:
         print("Pac Man application started!")
         while True:
-            start = time.perf_counter()
+            # start = time.perf_counter()
             screen = self.screens[self.state]
+            next_state = self.state
             for event in self.graphics.get_events():
                 next_state = screen.handle_event(event)
                 if next_state != self.state:
@@ -47,8 +52,9 @@ class PacMan:
                 self._transition_to(next_state)
             if next_state == AppState.EXIT:
                 break
-            elapsed = time.perf_counter() - start
-            time.sleep(max(0, FRAME_TIME - elapsed))
+            # elapsed = time.perf_counter() - start
+            # time.sleep(max(0, FRAME_TIME - elapsed))
+            # time.sleep(0)
             screen.render()
         self.graphics.quit()
 
