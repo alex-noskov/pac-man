@@ -2,8 +2,8 @@ import pygame
 import time
 from .screen import Screen
 from ..models import AppState
+# from ..graphics import Graphics
 from ..graphics import Graphics
-# from ..mlx_graphics import MlxGraphics
 from ..colors import YELLOW, BLACK, BLUE, PURPLE, ORANGE
 from ..ui import Layout, AbsoluteRect
 
@@ -22,13 +22,14 @@ class MainMenuScreen(Screen):
         self.graphics = graphics
         self.layout = Layout()
         self._self_app_state = AppState.MAIN_MENU
-        sizes = self.graphics.get_window_size()
-        self._width: int = sizes[0]
-        self._height: int = sizes[1]
-        self._cache: dict[str, AbsoluteRect] = {}
-        self._hovered_rect: str | None = None
-        self._gen_layout()
-        self._cache_abs_layout()
+        print("EST CONTACT!")
+        # sizes = self.graphics.get_window_size()
+        # self._width: int = sizes[0]
+        # self._height: int = sizes[1]
+        # self._cache: dict[str, AbsoluteRect] = {}
+        # self._hovered_rect: str | None = None
+        # self._gen_layout()
+        # self._cache_abs_layout()
 
     def _set_rect_colors(self, name: str, hovered: bool) -> None:
         rect = self._cache.get(name)
