@@ -28,8 +28,8 @@ clean:
 
 prompt:
 	cat src/*.py > prompt.txt
-	cat src/screens/*.py >> prompt
-	cat src/mlx_wrapper/*.py >> prompt
+	cat src/screens/*.py >> prompt.txt
+	cat src/mlx_wrapper/*.py >> prompt.txt
 	echo "\nStructure:\n" | cat  >> prompt.txt
 	ls -R src >> prompt.txt
 	xclip -selection clipboard < prompt.txt

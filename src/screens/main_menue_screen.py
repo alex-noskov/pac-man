@@ -1,4 +1,4 @@
-import pygame
+# import pygame
 import time
 from .screen import Screen
 from ..models import AppState
@@ -6,6 +6,7 @@ from ..models import AppState
 from ..graphics import Graphics
 from ..colors import YELLOW, BLACK, BLUE, PURPLE, ORANGE
 from ..ui import Layout, AbsoluteRect
+from ..events import Event, EventType
 
 
 BACKGROUND_COLOR = BLACK
@@ -23,13 +24,13 @@ class MainMenuScreen(Screen):
         self.layout = Layout()
         self._self_app_state = AppState.MAIN_MENU
         print("EST CONTACT!")
-        # sizes = self.graphics.get_window_size()
-        # self._width: int = sizes[0]
-        # self._height: int = sizes[1]
-        # self._cache: dict[str, AbsoluteRect] = {}
+        sizes = self.graphics.get_window_size()
+        self._width: int = sizes[0]
+        self._height: int = sizes[1]
+        self._cache: dict[str, AbsoluteRect] = {}
         # self._hovered_rect: str | None = None
-        # self._gen_layout()
-        # self._cache_abs_layout()
+        self._gen_layout()
+        self._cache_abs_layout()
 
     def _set_rect_colors(self, name: str, hovered: bool) -> None:
         rect = self._cache.get(name)
@@ -44,29 +45,29 @@ class MainMenuScreen(Screen):
         if rect.text is not None:
             rect.text.color = text_color
 
-    def handle_event(self, event: pygame.event.Event) -> AppState:
+    def handle_event(self, event: Event) -> AppState:
         """Handle an input event."""
-        if event.type == pygame.QUIT:
-            print(event)
+        if event.type == EventType.CLOSE:
             return AppState.EXIT
-        if event.type == pygame.MOUSEMOTION:
-            hovered_rect = None
-            for abs_rect in self._cache.values():
-                if abs_rect.contains(event.pos[0], event.pos[1]):
-                    hovered_rect = abs_rect.name
-                    break
-            if hovered_rect != self._hovered_rect:
-                if self._hovered_rect is not None:
-                    self._set_rect_colors(
-                        self._hovered_rect,
-                        hovered=False
-                    )
-                if hovered_rect is not None:
-                    self._set_rect_colors(
-                        hovered_rect,
-                        hovered=True
-                    )
-                self._hovered_rect = hovered_rect
+        # print(event)
+        # if event.type == pygame.MOUSEMOTION:
+        #    hovered_rect = None
+        #    for abs_rect in self._cache.values():
+        #        if abs_rect.contains(event.pos[0], event.pos[1]):
+        #            hovered_rect = abs_rect.name
+        #            break
+        #    if hovered_rect != self._hovered_rect:
+        #        if self._hovered_rect is not None:
+        #            self._set_rect_colors(
+        #                self._hovered_rect,
+        #                hovered=False
+        #            )
+        #        if hovered_rect is not None:
+        #            self._set_rect_colors(
+        #                hovered_rect,
+        #                hovered=True
+        #            )
+        #        self._hovered_rect = hovered_rect
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -117,9 +118,11 @@ class MainMenuScreen(Screen):
 
     def render(self) -> AppState:
         """Render the screen."""
-        t = time.perf_counter()
-        self.graphics.clear(BACKGROUND_COLOR)
-        t1 = time.perf_counter()
+        # return self._self_app_state
+
+        # t = time.perf_counter()
+        self.graphics.clear()
+        # t1 = time.perf_counter()
         for abs_rect in self._cache.values():
             self.graphics.draw_rectangle(
                 x=abs_rect.x,
@@ -138,13 +141,13 @@ class MainMenuScreen(Screen):
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
-        t2 = time.perf_counter()
+        # t2 = time.perf_counter()
         # self.graphics.draw_text("NADPIS", 100, 100, YELLOW, scale=10)
         self.graphics.refresh()
-        t3 = time.perf_counter()
-        print(
-            f"clear={t1-t:.6f} "
-            f"draw={t2-t1:.6f} "
-            f"refresh={t3-t2:.6f}"
-        )
+        # t3 = time.perf_counter()
+        # print(
+        #    f"clear={t1-t:.6f} "
+        #    f"draw={t2-t1:.6f} "
+        #    f"refresh={t3-t2:.6f}"
+        # )
         return self._self_app_state

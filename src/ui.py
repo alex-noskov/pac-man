@@ -180,7 +180,7 @@ class Layout():
         offset_x = rect.x_offsetp * rect_width / 100
         offset_y = rect.y_offsetp * rect_height / 100
         offset_x_rev = rect.x_offsetp_rev * rect_width / 100
-        offset_y_rev = rect.y_offsetp_rev * rect_width / 100
+        offset_y_rev = rect.y_offsetp_rev * rect_height / 100
 
         # The offsets move the usable text area and therefore affect
         # the amount of space available for scaling the text.
