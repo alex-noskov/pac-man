@@ -5,6 +5,8 @@ from enum import Enum, auto
 class EventType(Enum):
     KEY_DOWN = auto()
     KEY_UP = auto()
+    KEY_ENTER = auto()
+    KEY_ESC = auto()
     MOUSE_MOVE = auto()
     MOUSE_DOWN = auto()
     CLOSE = auto()
@@ -19,18 +21,20 @@ class Event:
 class EventFactory:
 
     @staticmethod
-    def key_down(key):
-        return Event(
-            EventType.KEY_DOWN,
-            {"key": key}
-        )
+    def key_down():
+        return Event(EventType.KEY_DOWN, {})
 
     @staticmethod
-    def key_up(key):
-        return Event(
-            EventType.KEY_UP,
-            {"key": key}
-        )
+    def key_up():
+        return Event(EventType.KEY_UP, {})
+
+    @staticmethod
+    def key_enter():
+        return Event(EventType.KEY_ENTER, {})
+
+    @staticmethod
+    def key_esc():
+        return Event(EventType.KEY_ESC, {})
 
     @staticmethod
     def mouse_move(x, y):

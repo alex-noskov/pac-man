@@ -1,10 +1,10 @@
 from mlx import Mlx
-from .mlx_constants import CLIENT_MESSAGE, MOTION_NOTIFY
-from .mlx_keycodes import KEY_ESC
-from .mlx_masks import POINTER_MOTION_MASK
+from .mlx_constants import CLIENT_MESSAGE  # , MOTION_NOTIFY
+from .mlx_keycodes import KEY_ENTER, KEY_UP, KEY_DOWN, KEY_ESC
+# from .mlx_masks import POINTER_MOTION_MASK
 from typing import Callable
 from collections import deque
-from ..events import EventFactory, EventType
+from ..events import EventFactory  # , EventType
 
 
 class MlxWrapper:
@@ -65,7 +65,7 @@ class MlxWrapper:
         #        self._event_buffer[-1] = EventFactory.mouse_move(x, y)
         #        return
 
-        self._event_buffer.append(EventFactory.mouse_move(x, y))
+        # self._event_buffer.append(EventFactory.mouse_move(x, y))
 
         # self.mouse_x = x
         # self.mouse_y = y
@@ -78,12 +78,21 @@ class MlxWrapper:
 
         # self._event_buffer.append(keycode)
 
-        if keycode == KEY_ESC:  # Escape
-            self.mlx.mlx_loop_exit(self.mlx_ptr)
+        # if keycode == KEY_ESC:  # Escape
+        #    self.stop_loop()
+        if keycode == KEY_UP:
+            self._event_buffer.append(EventFactory.key_up())
+        elif keycode == KEY_DOWN:
+            self._event_buffer.append(EventFactory.key_down())
+        elif keycode == KEY_ENTER:
+            self._event_buffer.append(EventFactory.key_enter())
+        elif keycode == KEY_ESC:
+            self._event_buffer.append(EventFactory.key_esc())
 
     def window_closed(self, xvar) -> None:
         print("WINDOW CLOSED")
-        self.quit()
+        print(xvar)
+        self.stop_loop()
         # self._event_buffer.appendleft(EventFactory.close())
 
     def loop(self, xvar) -> None:
@@ -96,16 +105,16 @@ class MlxWrapper:
 
     def start(self) -> None:
         # handle mouse button press
-        self.mlx.mlx_mouse_hook(self.window, self.mouse_press, None)
+        # self.mlx.mlx_mouse_hook(self.window, self.mouse_press, None)
         # handle keyboard pressed
         self.mlx.mlx_key_hook(self.window, self.key_pressed, None)
         # handle window "x" click
         self.mlx.mlx_hook(self.window, CLIENT_MESSAGE,
                           0, self.window_closed, None)
         # handle mouse motion
-        self.mlx.mlx_hook(self.window, MOTION_NOTIFY,
-                          POINTER_MOTION_MASK,
-                          self.mouse_move, None)
+        # self.mlx.mlx_hook(self.window, MOTION_NOTIFY,
+        #                  POINTER_MOTION_MASK,
+        #                  self.mouse_move, None)
         # handle mlx loop iteration
         self.mlx.mlx_loop_hook(self.mlx_ptr, self.loop, None)
         self.mlx.mlx_loop(self.mlx_ptr)
@@ -125,8 +134,14 @@ class MlxWrapper:
             self.mlx_ptr, self.window,
             self.image, 0, 0)
 
-    def clear(self) -> None:
-        self.mlx.mlx_clear_window(self.mlx_ptr, self.window)
+    def clear(self, color: int) -> None:
+        pixel = bytes((
+            color & 0xFF,
+            (color >> 8) & 0xFF,
+            (color >> 16) & 0xFF,
+            (color >> 24) & 0xFF,
+        ))
+        self.image_data[:] = pixel * (self.width * self.height)
 
     def put_pixel(self, x: int, y: int, color: int) -> None:
         if not (0 <= x < self.width and 0 <= y < self.height):
@@ -154,5 +169,5 @@ class MlxWrapper:
             for px in range(x, x + width):
                 self.put_pixel(px, py, color)
 
-    # def get_mouse_pos(self) -> tuple:
-    #    return self.mlx.mlx_mouse_get_pos(self.mlx_ptr)
+    def get_mouse_pos(self) -> tuple:
+        return self.mlx.mlx_mouse_get_pos(self.mlx_ptr, self.window)

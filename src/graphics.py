@@ -1,5 +1,6 @@
 from .mlx_wrapper import MlxWrapper
 from .font_map import FONT_MAP
+from . colors import BLACK
 from typing import Callable
 
 
@@ -24,8 +25,8 @@ class Graphics:
         """Return the current window width and height."""
         return (self.width, self.height)
 
-    def clear(self) -> None:
-        self.mlx_wrapper.clear()
+    def clear(self, color: int = BLACK) -> None:
+        self.mlx_wrapper.clear(color)
 
     def refresh(self) -> None:
         self.mlx_wrapper.refresh()
@@ -79,7 +80,7 @@ class Graphics:
         # self.put_image(image=image, x=x, y=y,
         #               background_color=background_color)
 
-    # def get_mouse_position(self) -> tuple:
-    #    return (self.mlx_wrapper.mouse_x, self.mlx_wrapper.mouse_y)
-    #    # return self.mlx_wrapper.get_mouse_pos()
-    #    # return (1, 1)
+    def get_mouse_position(self) -> tuple:
+        # return (self.mlx_wrapper.mouse_x, self.mlx_wrapper.mouse_y)
+        return self.mlx_wrapper.get_mouse_pos()
+        # return (1, 1)

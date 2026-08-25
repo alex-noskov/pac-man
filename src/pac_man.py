@@ -1,10 +1,10 @@
 import sys
-import time
+# import time
 from src.parsing import parse, Config
 from .models import AppState
 from .screens import (MainMenuScreen, InstructionsScreen,
                       HighscoresScreen, ExitScreen, Screen)
-from .events import EventType
+# from .events import EventType
 from .graphics import Graphics
 from collections import deque
 
@@ -30,8 +30,8 @@ class PacMan:
         }
         self.screen = self.screens[self.state]
 
-        self.x = 0
-        self.y = 0
+        # self.x = 0
+        # self.y = 0
 
     def app_loop(self, event_buffer: deque) -> None:
         # print("APP LOOP")
@@ -62,13 +62,13 @@ class PacMan:
         self.screen = self.screens[self.state]
 
     def start(self) -> None:
-        print("Pac Man application started!")
         self.graphics.start()
         self.graphics.quit()
 
 
 def main() -> None:
     """Start the Pac-Man game."""
+    print("Pac Man application started!")
     if len(sys.argv) != 2:
         print("Usage: python3 pac-man.py <config.json>")
         return
