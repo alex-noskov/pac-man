@@ -8,7 +8,7 @@ class AppState(Enum):
     HIGHSCORES = "highscores"
     INSTRUCTIONS = "instructions"
     EXIT = "exit"
-    # GAME = "game"
+    GAME = "game"
     # PAUSE = "pause"
     # GAME_OVER = "game_over"
     # VICTORY = "victory"

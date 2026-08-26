@@ -11,7 +11,7 @@ class HighscoresScreen(Screen):
 
     def __init__(self, graphics: Graphics) -> None:
         self.graphics = graphics
-        self.self_app_state = AppState.HIGHSCORES
+        self._self_app_state = AppState.HIGHSCORES
 
         sizes = self.graphics.get_window_size()
         self._width = sizes[0]
@@ -31,11 +31,11 @@ class HighscoresScreen(Screen):
         # if event.type == EventType.CLOSE:
         #    return AppState.EXIT
 
-        return self.self_app_state
+        return self._self_app_state
 
     def update(self) -> AppState:
         """Update screen logic."""
-        return self.self_app_state
+        return self._self_app_state
 
     def render(self) -> AppState:
         """Render the screen."""
@@ -55,7 +55,7 @@ class HighscoresScreen(Screen):
 
         self.graphics.refresh()
 
-        return self.self_app_state
+        return self._self_app_state
 
     def _gen_layout(self) -> None:
         # HIGHSCORES title: 20% down from the top.

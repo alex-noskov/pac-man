@@ -11,7 +11,7 @@ class InstructionsScreen(Screen):
 
     def __init__(self, graphics: Graphics) -> None:
         self.graphics = graphics
-        self.self_app_state = AppState.INSTRUCTIONS
+        self._self_app_state = AppState.INSTRUCTIONS
 
         sizes = self.graphics.get_window_size()
         self._width = sizes[0]
@@ -47,11 +47,11 @@ class InstructionsScreen(Screen):
         if event.type == EventType.CLOSE:
             return AppState.EXIT
 
-        return self.self_app_state
+        return self._self_app_state
 
     def update(self) -> AppState:
         """Update screen logic."""
-        return self.self_app_state
+        return self._self_app_state
 
     def render(self) -> AppState:
         """Render the screen."""
@@ -71,7 +71,7 @@ class InstructionsScreen(Screen):
 
         self.graphics.refresh()
 
-        return self.self_app_state
+        return self._self_app_state
 
     def _gen_layout(self) -> None:
         line_height = 5

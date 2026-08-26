@@ -20,14 +20,15 @@ class Screen(ABC):
 
 class ExitScreen(Screen):
     """Dummy exit screen"""
+    _self_app_state = AppState.EXIT
 
     def handle_event(self, event) -> AppState:
         """Handle an input event."""
-        return AppState.EXIT
+        return self._self_app_state
 
     def update(self) -> AppState:
         """Update screen logic."""
-        return AppState.EXIT
+        return self._self_app_state
 
     def render(self) -> AppState:
-        return AppState.EXIT
+        return self._self_app_state

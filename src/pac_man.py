@@ -2,7 +2,7 @@ import sys
 # import time
 from src.parsing import parse, Config
 from .models import AppState
-from .screens import (MainMenuScreen, InstructionsScreen,
+from .screens import (GameScreen, MainMenuScreen, InstructionsScreen,
                       HighscoresScreen, ExitScreen, Screen)
 # from .events import EventType
 from .graphics import Graphics
@@ -23,6 +23,7 @@ class PacMan:
             app_loop=self.app_loop,
         )
         self.screens: dict[AppState, Screen] = {
+            AppState.GAME: GameScreen(self.graphics, self.config),
             AppState.MAIN_MENU: MainMenuScreen(self.graphics),
             AppState.INSTRUCTIONS: InstructionsScreen(self.graphics),
             AppState.HIGHSCORES: HighscoresScreen(self.graphics),
@@ -73,5 +74,5 @@ def main() -> None:
         print("Usage: python3 pac-man.py <config.json>")
         return
     config = parse(sys.argv[1])
-    pac_man = PacMan(config)
+    pac_man = PacMan(config, AppState.GAME)
     pac_man.start()

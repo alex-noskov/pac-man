@@ -130,9 +130,9 @@ class MainMenuScreen(Screen):
 
     def _gen_layout(self) -> None:
         self.layout.add_rect(xp=0, yp=20, widthp=25,
-                             heightp=10, name="PLAY", text="PLAY",
+                             heightp=10, name="GAME", text="PLAY",
                              x_offsetp=5, x_offsetp_rev=5)
-        self.layout.center_rect_x("PLAY")
+        self.layout.center_rect_x("GAME")
         # print(self.layout.get_rect_absolute("PLAY_TEXT",
         #      width=self._width, height=self._height).text.scale)
         self.layout.add_rect(xp=0, yp=35, widthp=25,
@@ -161,7 +161,7 @@ class MainMenuScreen(Screen):
         self.layout.center_rect_x("CONTROL_INFO")
         # print(self.layout.get_rect_absolute("EXIT_TEXT",
         #      width=self._width, height=self._height).text.scale)
-        self._buttons = ["PLAY", "HIGHSCORES", "INSTRUCTIONS", "EXIT"]
+        self._buttons = ["GAME", "HIGHSCORES", "INSTRUCTIONS", "EXIT"]
 
     def _cache_abs_layout(self) -> None:
         for button_name in self._buttons:
