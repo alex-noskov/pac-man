@@ -1,5 +1,5 @@
 import sys
-# import time
+import time
 from src.parsing import parse, Config
 from .models import AppState
 from .screens import (GameScreen, MainMenuScreen, InstructionsScreen,
@@ -8,7 +8,7 @@ from .screens import (GameScreen, MainMenuScreen, InstructionsScreen,
 from .graphics import Graphics
 from collections import deque
 
-FPS = 60
+FPS = 120
 FRAME_TIME = 1 / FPS
 
 
@@ -35,10 +35,10 @@ class PacMan:
         # self.y = 0
 
     def app_loop(self, event_buffer: deque) -> None:
-        # print("APP LOOP")
-        # start = time.perf_counter()
+        start = time.perf_counter()
+
+        event_start = time.perf_counter()
         while event_buffer:
-            # for _ in range(min(100, len(event_buffer))):
             event = event_buffer.popleft()
             next_state = self.screen.handle_event(event)
             if next_state != self.state:
@@ -46,16 +46,29 @@ class PacMan:
             if self.state == AppState.EXIT:
                 self.graphics.stop_loop()
                 return
+        event_time = time.perf_counter() - event_start
+
+        update_start = time.perf_counter()
         next_state = self.screen.update()
         if next_state != self.state:
             self._transition_to(next_state)
-        if self.state == AppState.EXIT:
-            self.graphics.stop_loop()
-            return
-        # elapsed = time.perf_counter() - start
-        # time.sleep(max(0, FRAME_TIME - elapsed))
-        # print(self.graphics.get_mouse_position())
+        update_time = time.perf_counter() - update_start
+
+        before_sleep = time.perf_counter() - start
+        time.sleep(max(0, FRAME_TIME - before_sleep))
+
+        render_start = time.perf_counter()
         self.screen.render()
+        render_time = time.perf_counter() - render_start
+
+        total = time.perf_counter() - start
+
+        # print(
+        #    f"events={event_time*1000:.1f}ms "
+        #    f"update={update_time*1000:.1f}ms "
+        #    f"render={render_time*1000:.1f}ms "
+        #    f"total={total*1000:.1f}ms"
+        # )
 
     def _transition_to(self, state: AppState) -> None:
         print(f"NEW STATE: {self.state} -> {state}")

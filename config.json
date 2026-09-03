@@ -1,0 +1,67 @@
+{
+    "highscore_filename": "highscores.json",
+    "level" : [
+        {
+            "level_number": 0,
+            "width": "14",
+            "height": "14"
+        },
+        {
+            "level_number": 1,
+            "width": "19",
+            "height": "17"
+        },
+        {
+            "level_number": 2,
+            "width": "19",
+            "height": "19"
+        },
+
+        {
+            "level_number": 3,
+            "width": "24",
+            "height": "19"
+        },
+
+        {
+            "level_number": 4,
+            "width": "24",
+            "height": "24"
+        },
+
+        {
+            "level_number": 5,
+            "width": "29",
+            "height": "24"
+        },
+        {
+            "level_number": 6,
+            "width": "29",
+            "height": "27"
+        },
+        {
+            "level_number": 7,
+            "width": "31",
+            "height": "29"
+        },
+        {
+            "level_number": 8,
+            "width": "34",
+            "height": "29"
+        },
+        {
+            "level_number": 9,
+            "width": "34",
+            "height": "34"
+        }
+    ],
+    "lives": 3,
+    "pacgum": 41,
+    "points_per_pacgum": 9,
+    "points_per_super_pacgum": 49,
+    "points_per_ghost": 199,
+    "seed": "41",
+    "level_max_time": 499,
+    "window_width": 1920,
+    "window_height": 1080
+}

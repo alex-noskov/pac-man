@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ..models.app_state import AppState
+from ..models import AppState
 
 
 class Screen(ABC):

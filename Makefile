@@ -1,7 +1,7 @@
 DEF_CONFIG = config.json
 
 run:
-	uv run python3 -m src DEF_CONFIG
+	uv run python3 -m src $(DEF_CONFIG)
 
 install:
 	uv sync
