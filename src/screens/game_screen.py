@@ -36,13 +36,9 @@ PACMAN_COLOR = ORANGE
 
 CELL_PREFIX = "CELL_"
 BORDER_PREFIX = "BORDER_"
+MENUE_PREFIX = "MENUE_"
 PACGUM_PREFIX = "PACGUM_"
 SUPER_PACGUM_PREFIX = "SUPER_PACGUM_"
-
-BORDER_SIZE = 0.2
-MARGIN_X = 2
-MARGIN_Y = 2
-TOPBAR_HEIGHT = 10
 
 PACMAN_SPAWN_COL = 1
 PACMAN_SPAWN_ROW = 1
@@ -63,11 +59,15 @@ DIRECTION_TO_WALL_KEY = {
 
 
 class GameScreen(Screen):
-
     """Gameplay screen."""
 
     def __init__(self, graphics: Graphics, config: Config) -> None:
         self.LEVEL = 0
+        self.BORDER_SIZE = 0.2
+        self.MARGIN_X = 2.0
+        self.MARGIN_Y = 2.0
+        self.TOPBAR_HEIGHT = 10
+        self.STARTED = False
         self._self_app_state = AppState.GAME
 
         self.graphics = graphics
@@ -90,17 +90,41 @@ class GameScreen(Screen):
         # print(abs_circle.x, abs_circle.y)
         # print(abs_circle.contains(1000, 600))
         # return
-        self._start_level()
+        # self._start_level()
 
     def _start_level(self) -> None:
+        print("START LEVEL!")
         self._cell_names: list[str] = []
         self._border_names: list[str] = []
+        self._menue_names: list[str] = []
         self._pacgum_names: list[str] = []
         self._super_pacgum_names: list[str] = []
         self._42_pattern: list[str] = []
         self._cell_walls: dict[tuple[int, int], dict[str, bool]] = {}
 
-        self._ensure_layers()
+        # self._ensure_layers()
+        self.graphics.clear()
+        self.graphics.fill(BLACK)
+        # self.graphics.set_layer_order(["main"])
+        # first_time = not self.graphics.has_layer(LAYER_MAZE)
+
+        # for name in LAYER_ORDER:
+        #    if not self.graphics.has_layer(name):
+        #        self.graphics.create_layer(name)
+
+        print("before layers:", self.graphics.mlx_wrapper._layers)
+        print("before layer order:", self.graphics.mlx_wrapper._layer_order)
+        for name in LAYER_ORDER:
+            self.graphics.create_layer(name)
+        print("after layers:", self.graphics.mlx_wrapper._layers)
+        print("after layer order:", self.graphics.mlx_wrapper._layer_order)
+        # if first_time:
+        self.graphics.set_layer_order(LAYER_ORDER)
+        # else:
+        # Level restart / new level: wipe the static layers so the
+        # old maze/pacgums don't bleed into the new one.
+        # self.graphics.clear(LAYER_MAZE)
+        # self.graphics.clear(LAYER_PACGUMS)
 
         # Absolute geometry cache.
         #
@@ -111,21 +135,32 @@ class GameScreen(Screen):
 
         self._cell_cache: dict[str, AbsoluteRect] = {}
         self._border_cache: dict[str, AbsoluteRect] = {}
+        self._menue_cache: dict[str, AbsoluteRect] = {}
         self._pacgum_cache: dict[str, AbsoluteCircle] = {}
         self._super_pacgum_cache: dict[str, AbsoluteCircle] = {}
 
         self._make_maze()
         self._make_pacgums()
+        self._make_top_bar()
         self._rebuild_cache()
         self._spawn_pacman(PACMAN_SPAWN_COL, PACMAN_SPAWN_ROW)
+
+    def _end_level(self, return_state: AppState) -> AppState:
+        self.STARTED = False
+        for layer in LAYER_ORDER:
+            self.graphics.remove_layer(layer)
+        return return_state
 
     def handle_event(self, event: Event) -> AppState:
         # return self._self_app_state
         """Handle input events."""
+        if not self.STARTED:
+            self._start_level()
+            self.STARTED = True
         if event.type == EventType.CLOSE:
-            return AppState.EXIT
+            return self._end_level(AppState.EXIT)
         if event.type == EventType.KEY_ESC:
-            return AppState.EXIT
+            return self._end_level(AppState.MAIN_MENU)
         if event.type == EventType.KEY_UP:
             self._pac_man.set_direction(Directions.UP)
             return self._self_app_state
@@ -143,6 +178,9 @@ class GameScreen(Screen):
     def update(self) -> AppState:
         """Update gameplay logic."""
         # return self._self_app_state
+        if not self.STARTED:
+            self._start_level()
+            self.STARTED = True
         departed = self._pac_man.move(self._can_move, self._eat_pacgum)
         if departed is not None:
             dcol, drow = departed.value
@@ -152,6 +190,9 @@ class GameScreen(Screen):
 
     def render(self) -> AppState:
         """Render the current frame."""
+        if not self.STARTED:
+            self._start_level()
+            self.STARTED = True
         # return self._self_app_state
         # The maze and pacgums layers are drawn once in _rebuild_cache()
         # and never cleared here - they act as the cache. Only the
@@ -173,6 +214,9 @@ class GameScreen(Screen):
     def _ensure_layers(self) -> None:
         """Create the layers if this is the first time, otherwise wipe
         the layers whose content depends on the (re)generated maze."""
+        self.graphics.clear()
+        self.graphics.fill(BLACK)
+        self.graphics.set_layer_order(["main"])
         first_time = not self.graphics.has_layer(LAYER_MAZE)
 
         for name in LAYER_ORDER:
@@ -186,74 +230,6 @@ class GameScreen(Screen):
             # old maze/pacgums don't bleed into the new one.
             self.graphics.clear(LAYER_MAZE)
             self.graphics.clear(LAYER_PACGUMS)
-
-    # ------------------------------------------------------------------
-    # Cache
-    # ------------------------------------------------------------------
-
-    def _rebuild_cache(self) -> None:
-        """Rebuild all pixel-based geometry caches and draw the static
-        layers (maze walls/cells, pacgums) exactly once."""
-        self._cache_width = self._width
-        self._cache_height = self._height
-
-        self._cell_cache.clear()
-        self._border_cache.clear()
-        self._pacgum_cache.clear()
-        self._super_pacgum_cache.clear()
-
-        self._cache_cells()
-        self._cache_borders()
-        self._cache_pacgums()
-
-        # Opaque base fill so the maze layer covers every pixel of the
-        # window (including margins/corridors), otherwise it can't fully
-        # overwrite whatever was drawn on top of it the previous frame.
-        self.graphics.fill(BLACK, layer=LAYER_MAZE)
-        self._render_cells()
-        self._render_borders()
-        self._render_pacgums()
-
-    def _cache_cells(self) -> None:
-        """Cache all maze cells in absolute pixel coordinates."""
-        for name in self._cell_names:
-            rect = self.layout.get_rect_absolute(
-                name,
-                self._width,
-                self._height,
-            )
-
-            if rect is not None:
-                self._cell_cache[name] = rect
-
-    def _cache_borders(self) -> None:
-        """Cache all maze borders in absolute pixel coordinates."""
-        for name in self._border_names:
-            rect = self.layout.get_rect_absolute(
-                name,
-                self._width,
-                self._height,
-            )
-
-            if rect is not None:
-                self._border_cache[name] = rect
-
-    def _cache_pacgums(self) -> None:
-        """Cache the pixel position and radius of all pac-gums."""
-        for pacgum_name in self._pacgum_names:
-            abs_circle = self.layout.get_circle_absolute(
-                pacgum_name, self._width, self._height)
-            if abs_circle is None:
-                continue
-            abs_circle.color = PACGUM_COLOR
-            self._pacgum_cache[pacgum_name] = abs_circle
-        for super_pacgum_name in self._super_pacgum_names:
-            abs_circle = self.layout.get_circle_absolute(
-                super_pacgum_name, self._width, self._height)
-            if abs_circle is None:
-                continue
-            abs_circle.color = PACGUM_COLOR
-            self._super_pacgum_cache[super_pacgum_name] = abs_circle
 
     # ------------------------------------------------------------------
     # Rendering
@@ -280,8 +256,8 @@ class GameScreen(Screen):
 
     def _render_borders(self) -> None:
         """Render maze walls using cached absolute geometry."""
-        for name in self._border_names:
-            border = self._border_cache.get(name)
+        for border_name in self._border_names:
+            border = self._border_cache.get(border_name)
 
             if border is None:
                 continue
@@ -292,6 +268,30 @@ class GameScreen(Screen):
                 width=border.width,
                 height=border.height,
                 color=BORDER_COLOR,
+                layer=LAYER_MAZE,
+            )
+
+    def _render_menue(self) -> None:
+        """Render maze walls using cached absolute geometry."""
+        for menue_name in self._menue_names:
+            menue_rect = self._menue_cache.get(menue_name)
+            if menue_rect is None or menue_rect.text is None:
+                continue
+            self.graphics.draw_rectangle(
+                x=menue_rect.x,
+                y=menue_rect.y,
+                width=menue_rect.width,
+                height=menue_rect.height,
+                color=YELLOW,
+                layer=LAYER_MAZE,
+            )
+            self.graphics.draw_text(
+                text=menue_rect.text.text,
+                x=menue_rect.text.x,
+                y=menue_rect.text.y,
+                color=WHITE,
+                spacing=menue_rect.text.spacing,
+                scale=menue_rect.text.scale,
                 layer=LAYER_MAZE,
             )
 
@@ -320,6 +320,91 @@ class GameScreen(Screen):
                                  layer=LAYER_SPRITES)
 
     # ------------------------------------------------------------------
+    # Cache
+    # ------------------------------------------------------------------
+
+    def _rebuild_cache(self) -> None:
+        """Rebuild all pixel-based geometry caches and draw the static
+        layers (maze walls/cells, pacgums) exactly once."""
+        self._cache_width = self._width
+        self._cache_height = self._height
+
+        self._cell_cache.clear()
+        self._border_cache.clear()
+        self._pacgum_cache.clear()
+        self._super_pacgum_cache.clear()
+
+        self._cache_cells()
+        self._cache_borders()
+        self._cache_menue()
+        self._cache_pacgums()
+
+        # Opaque base fill so the maze layer covers every pixel of the
+        # window (including margins/corridors), otherwise it can't fully
+        # overwrite whatever was drawn on top of it the previous frame.
+        # self.graphics.fill(BLACK, layer=LAYER_MAZE)
+        self._render_cells()
+        self._render_borders()
+        self._render_menue()
+        self._render_pacgums()
+
+    def _cache_cells(self) -> None:
+        """Cache all maze cells in absolute pixel coordinates."""
+        for cell_name in self._cell_names:
+            rect = self.layout.get_rect_absolute(
+                cell_name,
+                self._width,
+                self._height,
+            )
+
+            if rect is not None:
+                self._cell_cache[cell_name] = rect
+
+    def _cache_borders(self) -> None:
+        """Cache all maze borders in absolute pixel coordinates."""
+        for border_name in self._border_names:
+            rect = self.layout.get_rect_absolute(
+                border_name,
+                self._width,
+                self._height,
+            )
+
+            if rect is not None:
+                self._border_cache[border_name] = rect
+
+    def _cache_menue(self) -> None:
+        for menue_name in self._menue_names:
+            rect = self.layout.get_rect_absolute(
+                menue_name,
+                self._width,
+                self._height,
+            )
+            if rect is not None:
+                rect.color = BLACK
+                if rect.text is not None:
+                    rect.text.color = WHITE
+                print(rect.x, rect.y)
+                print(rect.width, rect.height)
+                self._menue_cache[menue_name] = rect
+
+    def _cache_pacgums(self) -> None:
+        """Cache the pixel position and radius of all pac-gums."""
+        for pacgum_name in self._pacgum_names:
+            abs_circle = self.layout.get_circle_absolute(
+                pacgum_name, self._width, self._height)
+            if abs_circle is None:
+                continue
+            abs_circle.color = PACGUM_COLOR
+            self._pacgum_cache[pacgum_name] = abs_circle
+        for super_pacgum_name in self._super_pacgum_names:
+            abs_circle = self.layout.get_circle_absolute(
+                super_pacgum_name, self._width, self._height)
+            if abs_circle is None:
+                continue
+            abs_circle.color = PACGUM_COLOR
+            self._super_pacgum_cache[super_pacgum_name] = abs_circle
+
+    # ------------------------------------------------------------------
     # Maze
     # ------------------------------------------------------------------
 
@@ -329,11 +414,11 @@ class GameScreen(Screen):
 
         self._maze_gen.generate()
 
-        total_width = 100 - MARGIN_X * 2
-        total_height = 100 - MARGIN_Y * 2
+        total_width = 100 - self.MARGIN_X * 2
+        total_height = 100 - self.MARGIN_Y * 2
 
         maze_width = total_width
-        maze_height = total_height - TOPBAR_HEIGHT
+        maze_height = total_height - self.TOPBAR_HEIGHT
 
         # Available size of one cell in pixels.
         cell_width = maze_width / lvl.width / 100 * self._width
@@ -350,12 +435,16 @@ class GameScreen(Screen):
         final_maze_height = cell_height_p * lvl.height
 
         final_total_width = final_maze_width
-        final_total_height = final_maze_height + TOPBAR_HEIGHT
+        final_total_height = final_maze_height + self.TOPBAR_HEIGHT
 
         margin_left = (100 - final_total_width) / 2
         margin_top = (100 - final_total_height) / 2
+        print("margin 0", self.MARGIN_X)
+        self.MARGIN_X = margin_left
+        self.MARGIN_Y = margin_top
+        print("margin 1", self.MARGIN_X)
 
-        maze_top = margin_top + TOPBAR_HEIGHT
+        maze_top = margin_top + self.TOPBAR_HEIGHT
 
         for y, row in enumerate(self._maze_gen.maze):
             y_pos = maze_top + cell_height_p * y
@@ -392,8 +481,8 @@ class GameScreen(Screen):
             return
 
         west, south, east, north = TWO_BASE_TABLE[bits]
-        border_x_thickness = cell.widthp * BORDER_SIZE
-        border_y_thickness = cell.heightp * BORDER_SIZE
+        border_x_thickness = cell.widthp * self.BORDER_SIZE
+        border_y_thickness = cell.heightp * self.BORDER_SIZE
 
         if west:
             border_name = f"{BORDER_PREFIX}{name}_WEST"
@@ -504,6 +593,18 @@ class GameScreen(Screen):
                 del self._pacgum_names[i]
                 self.graphics.clear(LAYER_PACGUMS)
                 self._render_pacgums()
+                return
+            i += 1
+        i = 0
+        for super_pacgum_name in self._super_pacgum_names:
+            abs_circle = self._super_pacgum_cache[super_pacgum_name]
+            if abs_circle.contains(x, y):
+                print("SUPER EATEN")
+                del self._super_pacgum_cache[super_pacgum_name]
+                del self._super_pacgum_names[i]
+                self.graphics.clear(LAYER_PACGUMS)
+                self._render_pacgums()
+                return
             i += 1
 
     # ------------------------------------------------------------------
@@ -527,7 +628,7 @@ class GameScreen(Screen):
             return
 
         sprite_size = int(
-            math.ceil(self._cell_size_px * (0.9 - BORDER_SIZE)))
+            math.ceil(self._cell_size_px * (0.9 - self.BORDER_SIZE)))
         center_x = cell.x + cell.width // 2 - sprite_size // 2
         center_y = cell.y + cell.height // 2 - sprite_size // 2
 
@@ -541,3 +642,19 @@ class GameScreen(Screen):
 
         self._pacman_col = col
         self._pacman_row = row
+
+    # ------------------------------------------------------------------
+    # Top Bar
+    # ------------------------------------------------------------------
+
+    def _make_top_bar(self) -> None:
+        print("margin 2", self.MARGIN_X)
+        self.layout.add_rect(
+            xp=self.MARGIN_X,
+            yp=self.MARGIN_Y,
+            widthp=(100 - self.MARGIN_X * 2) / 3,
+            heightp=self.TOPBAR_HEIGHT,
+            name=f"{MENUE_PREFIX}SCORE",
+            text="SCORE:",
+        )
+        self._menue_names.append(f"{MENUE_PREFIX}SCORE")

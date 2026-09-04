@@ -12,9 +12,9 @@ FPS = 120
 FRAME_TIME = 1 / FPS
 
 
-class PacMan:
-    def __init__(self, config: Config, state: AppState = AppState.MAIN_MENU
-                 ) -> None:
+class App:
+    def __init__(self, config: Config,
+                 state: AppState = AppState.MAIN_MENU) -> None:
         self.config = config
         self.state = state
         self.graphics = Graphics(
@@ -36,7 +36,6 @@ class PacMan:
 
     def app_loop(self, event_buffer: deque) -> None:
         start = time.perf_counter()
-
         event_start = time.perf_counter()
         while event_buffer:
             event = event_buffer.popleft()
@@ -87,5 +86,5 @@ def main() -> None:
         print("Usage: python3 pac-man.py <config.json>")
         return
     config = parse(sys.argv[1])
-    pac_man = PacMan(config, AppState.GAME)
-    pac_man.start()
+    app = App(config, AppState.GAME)
+    app.start()

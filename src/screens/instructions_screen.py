@@ -56,7 +56,8 @@ class InstructionsScreen(Screen):
     def render(self) -> AppState:
         """Render the screen."""
         self.graphics.clear()
-
+        self.graphics.fill(BLACK)
+        self.graphics.set_layer_order(["main"])
         for abs_rect in self._cache.values():
             if abs_rect.text is not None:
                 self.graphics.draw_text(
@@ -64,7 +65,6 @@ class InstructionsScreen(Screen):
                     x=abs_rect.text.x,
                     y=abs_rect.text.y,
                     color=abs_rect.text.color,
-                    background_color=BLACK,
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )

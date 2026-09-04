@@ -82,6 +82,8 @@ class MainMenuScreen(Screen):
 
         # t = time.perf_counter()
         self.graphics.clear()
+        self.graphics.fill(BLACK)
+        self.graphics.set_layer_order(["main"])
         # t1 = time.perf_counter()
         for abs_rect in self._cache.values():
             self.graphics.draw_rectangle(
@@ -97,7 +99,6 @@ class MainMenuScreen(Screen):
                     x=abs_rect.text.x,
                     y=abs_rect.text.y,
                     color=abs_rect.text.color,
-                    background_color=abs_rect.color,
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
