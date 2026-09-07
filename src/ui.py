@@ -185,7 +185,9 @@ class Layout():
     def change_text_rect(self, text: str, name: str) -> None:
         rect = self._rects.get(name)
         if rect is None:
+            print("NIGGER")
             return
+        print(f"{name} rect's text: '{rect.text}' -> '{text}'")
         rect.text = text
 
     def center_rect_x(self, name: str) -> None:
@@ -294,60 +296,62 @@ class Layout():
         window_width: int,
         window_height: int,
         spacing: int = 1,
-        scale: int = 0
+        scale: int = 0,
     ) -> AbsoluteText | None:
         if not rect.text:
             return None
 
         char_width = 5
         char_height = 8
-
         character_count = len(rect.text)
 
-        # Calculate the unscaled text dimensions.
-        # There is no spacing after the last character.
         text_width = (
             character_count * char_width
-            + (character_count - 1) * spacing
+            + max(0, character_count - 1) * spacing
         )
         text_height = char_height
 
-        # Convert the rectangle from percentages to pixels.
+        # Rectangle in pixels.
         rect_x = rect.xp * window_width / 100
         rect_y = rect.yp * window_height / 100
         rect_width = rect.widthp * window_width / 100
         rect_height = rect.heightp * window_height / 100
 
-        # Offsets are percentages of the rectangle, not the window.
+        # Offsets are percentages of the rectangle.
         offset_x = rect.x_offsetp * rect_width / 100
         offset_y = rect.y_offsetp * rect_height / 100
         offset_x_rev = rect.x_offsetp_rev * rect_width / 100
         offset_y_rev = rect.y_offsetp_rev * rect_height / 100
 
-        # The offsets move the usable text area and therefore affect
-        # the amount of space available for scaling the text.
         text_area_x = rect_x + offset_x
         text_area_y = rect_y + offset_y
         text_area_width = rect_width - offset_x - offset_x_rev
         text_area_height = rect_height - offset_y - offset_y_rev
 
+        if text_area_width <= 0 or text_area_height <= 0:
+            return None
+
         if scale == 0:
             scale_x = text_area_width / text_width
             scale_y = text_area_height / text_height
 
-            scale = max(1, int(math.ceil(min(scale_x, scale_y))))
+            # Largest integer scale that fits.
+            scale = max(1, int(math.floor(min(scale_x, scale_y))))
 
         scaled_width = text_width * scale
         scaled_height = text_height * scale
         scaled_spacing = spacing * scale
 
-        # Center the scaled text inside the offset text area.
         text_x = text_area_x + (text_area_width - scaled_width) / 2
         text_y = text_area_y + (text_area_height - scaled_height) / 2
 
-        return AbsoluteText(rect.text, int(math.ceil(text_x)),
-                            int(math.ceil(text_y)),
-                            scaled_spacing, scale)
+        return AbsoluteText(
+            rect.text,
+            int(math.ceil(text_x)),
+            int(math.ceil(text_y)),
+            scaled_spacing,
+            scale,
+        )
 
     def get_all_rects(self) -> list[Rect]:
         return [copy(rect) for rect in self._rects.values()]

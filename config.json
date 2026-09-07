@@ -62,6 +62,6 @@
     "points_per_ghost": 199,
     "seed": "41",
     "level_max_time": 499,
-    "window_width": 1920,
-    "window_height": 1080
+    "window_width": 1500,
+    "window_height": 2000
 }
