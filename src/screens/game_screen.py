@@ -78,7 +78,7 @@ class GameScreen(Screen):
     def __init__(self, graphics: Graphics, config: Config) -> None:
         self._score = 0
         self._lives = 3
-        self._level = 1
+        self._level = -1
 
         self.BORDER_SIZE = 0.2
         self.TOPBAR_HEIGHT = 10
