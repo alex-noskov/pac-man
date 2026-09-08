@@ -3,12 +3,13 @@ import time
 from src.parsing import parse, Config
 from .models import AppState
 from .screens import (GameScreen, MainMenuScreen, InstructionsScreen,
-                      HighscoresScreen, ExitScreen, Screen)
+                      HighscoresScreen, ExitScreen, Screen,
+                      LevelCompleteScreen)
 # from .events import EventType
 from .graphics import Graphics
 from collections import deque
 
-FPS = 120
+FPS = 60
 FRAME_TIME = 1 / FPS
 
 
@@ -27,7 +28,8 @@ class App:
             AppState.MAIN_MENU: MainMenuScreen(self.graphics),
             AppState.INSTRUCTIONS: InstructionsScreen(self.graphics),
             AppState.HIGHSCORES: HighscoresScreen(self.graphics),
-            AppState.EXIT: ExitScreen()
+            AppState.LEVEL_COMPLETE: LevelCompleteScreen(self.graphics),
+            AppState.EXIT: ExitScreen(),
         }
         self.screen = self.screens[self.state]
 
@@ -86,5 +88,6 @@ def main() -> None:
         print("Usage: python3 pac-man.py <config.json>")
         return
     config = parse(sys.argv[1])
+    # return
     app = App(config, AppState.GAME)
     app.start()

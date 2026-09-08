@@ -9,6 +9,7 @@ class AppState(Enum):
     INSTRUCTIONS = "instructions"
     EXIT = "exit"
     GAME = "game"
+    LEVEL_COMPLETE = "level_complete"
     # PAUSE = "pause"
     # GAME_OVER = "game_over"
     # VICTORY = "victory"

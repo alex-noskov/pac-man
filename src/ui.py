@@ -182,12 +182,12 @@ class Layout():
 
         circle.radiusp = radiusp
 
-    def change_text_rect(self, text: str, name: str) -> None:
+    def change_text_rect(self, name: str, text: str) -> None:
         rect = self._rects.get(name)
         if rect is None:
-            print("NIGGER")
+            # print(f"NIGGER for {name}")
             return
-        print(f"{name} rect's text: '{rect.text}' -> '{text}'")
+        # print(f"{name} rect's text: '{rect.text}' -> '{text}'")
         rect.text = text
 
     def center_rect_x(self, name: str) -> None:

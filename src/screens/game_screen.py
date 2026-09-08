@@ -3,7 +3,7 @@ from .screen import Screen
 from ..models import AppState, Directions
 from ..graphics import Graphics
 from ..parsing import Config
-from ..colors import WHITE, YELLOW, GREEN, BLACK, ORANGE
+from ..colors import WHITE, YELLOW, BLACK, BLUE, PINK
 from ..events import Event, EventType
 from ..ui import Layout, AbsoluteRect, AbsoluteCircle
 from ..game import PacMan
@@ -31,10 +31,10 @@ TWO_BASE_TABLE = {
 }
 
 
-PACGUM_COLOR = GREEN
-SUPER_PACGUM_COLOR = GREEN
-BORDER_COLOR = GREEN
-PACMAN_COLOR = ORANGE
+PACGUM_COLOR = PINK
+SUPER_PACGUM_COLOR = PINK
+BORDER_COLOR = BLUE
+PACMAN_COLOR = YELLOW
 
 
 CELL_PREFIX = "CELL_"
@@ -45,9 +45,9 @@ PACGUM_PREFIX = "PACGUM_"
 SUPER_PACGUM_PREFIX = "SUPER_PACGUM_"
 
 
-PACMAN_SPAWN_COL = 1
-PACMAN_SPAWN_ROW = 1
-PACMAN_SPEED = 4
+PACMAN_SPAWN_COL = 0
+PACMAN_SPAWN_ROW = 0
+PACMAN_SPEED = 10
 
 
 LAYER_MAZE = "maze"
@@ -76,21 +76,17 @@ class GameScreen(Screen):
     """Gameplay screen."""
 
     def __init__(self, graphics: Graphics, config: Config) -> None:
-        self.LEVEL = 0
+        self._score = 0
+        self._lives = 3
+        self._level = 1
 
         self.BORDER_SIZE = 0.2
-        self.MARGIN_X = 2.0
-        self.MARGIN_Y = 2.0
         self.TOPBAR_HEIGHT = 10
 
         self.STARTED = False
-        self._self_app_state = AppState.GAME
 
         self.graphics = graphics
         self.config = config
-
-        self.layout = Layout()
-        self._maze_gen = MazeGenerator()
 
         # Grid-based Pac-Man state.
         # Real x/y/cell_size are set in _spawn_pacman()
@@ -103,15 +99,20 @@ class GameScreen(Screen):
         self._to_visual_x = 100
         self._to_visual_y = 100
 
-        self._score = 0
-        self._lives = 3
-        self._level = 1
     # ------------------------------------------------------------------
-    # Level
+    # Screen
     # ------------------------------------------------------------------
 
-    def _start_level(self) -> None:
+    def _start_screen(self) -> None:
         print("START LEVEL!")
+        self.MARGIN_X = 2.0
+        self.MARGIN_Y = 2.0
+        self._level += 1
+        self._LEVEL_DICT = self.config.levels[self._level]
+        self.layout = Layout()
+        self._maze_gen = MazeGenerator(
+            (self._LEVEL_DICT.width, self._LEVEL_DICT.height))
+        self._self_app_state = AppState.GAME
 
         self._cell_names: list[str] = []
         self._border_names: list[str] = []
@@ -126,21 +127,11 @@ class GameScreen(Screen):
         self.graphics.clear()
         self.graphics.fill(BLACK)
 
-        # print("before layers:", self.graphics.mlx_wrapper._layers)
-        # print("before layer order:", self.graphics.mlx_wrapper._layer_order)
-
         for name in LAYER_ORDER:
             self.graphics.create_layer(name)
-
-        # print("after layers:", self.graphics.mlx_wrapper._layers)
-        # print("after layer order:", self.graphics.mlx_wrapper._layer_order)
-
         self.graphics.set_layer_order(LAYER_ORDER)
 
         # Absolute geometry cache.
-        self._cache_width = self._width
-        self._cache_height = self._height
-
         self._cell_cache: dict[str, AbsoluteRect] = {}
         self._border_cache: dict[str, AbsoluteRect] = {}
         self._top_bar_cache: dict[str, AbsoluteRect] = {}
@@ -149,6 +140,8 @@ class GameScreen(Screen):
         self._super_pacgum_cache: dict[str, AbsoluteCircle] = {}
 
         self._time = 0
+        self._top_bar_scale = 0
+        self._value_scale = 0
 
         self._make_maze()
         self._make_pacgums()
@@ -161,13 +154,22 @@ class GameScreen(Screen):
             PACMAN_SPAWN_COL,
             PACMAN_SPAWN_ROW,
         )
+        self.STARTED = True
 
-    def _end_level(self, return_state: AppState) -> AppState:
-        self.STARTED = False
+    # def _end_state(self, return_state: AppState) -> AppState:
+    #    self.STARTED = False
 
-        for layer in LAYER_ORDER:
-            self.graphics.remove_layer(layer)
+    #    for layer in LAYER_ORDER:
+    #        self.graphics.remove_layer(layer)
 
+    #    return return_state
+
+    def _return_state(self, return_state: AppState) -> AppState:
+        if return_state == AppState.LEVEL_COMPLETE or \
+                return_state == AppState.MAIN_MENU:
+            self.STARTED = False
+            for layer in LAYER_ORDER:
+                self.graphics.remove_layer(layer)
         return return_state
 
     # ------------------------------------------------------------------
@@ -178,75 +180,57 @@ class GameScreen(Screen):
         """Handle input events."""
 
         if not self.STARTED:
-            self._start_level()
-            self.STARTED = True
-
+            self._start_screen()
         if event.type == EventType.CLOSE:
-            return self._end_level(AppState.EXIT)
-
+            return self._return_state(AppState.EXIT)
         if event.type == EventType.KEY_ESC:
-            return self._end_level(AppState.MAIN_MENU)
-
+            return self._return_state(AppState.MAIN_MENU)
         if event.type == EventType.KEY_UP:
             self._pac_man.set_direction(Directions.UP)
-            return self._self_app_state
-
+            return self._return_state(self._self_app_state)
         if event.type == EventType.KEY_RIGHT:
             self._pac_man.set_direction(Directions.RIGHT)
-            return self._self_app_state
-
+            return self._return_state(self._self_app_state)
         if event.type == EventType.KEY_DOWN:
             self._pac_man.set_direction(Directions.DOWN)
-            return self._self_app_state
-
+            return self._return_state(self._self_app_state)
         if event.type == EventType.KEY_LEFT:
             self._pac_man.set_direction(Directions.LEFT)
-            return self._self_app_state
-
-        return self._self_app_state
+            return self._return_state(self._self_app_state)
+        return self._return_state(self._self_app_state)
 
     def update(self) -> AppState:
         """Update gameplay logic."""
 
         if not self.STARTED:
-            self._start_level()
-            self.STARTED = True
-
+            self._start_screen()
         departed = self._pac_man.move(
             self._can_move,
             self._eat_pacgum,
         )
-
         if departed is not None:
             dcol, drow = departed.value
 
             self._pacman_col += dcol
             self._pacman_row += drow
-
-        return self._self_app_state
+        return self._return_state(self._self_app_state)
 
     def render(self) -> AppState:
         """Render the current frame."""
 
         if not self.STARTED:
-            self._start_level()
-            self.STARTED = True
-
+            self._start_screen()
         # Static maze/top-bar/pacgum/value layers are rendered by
         # _rebuild_cache(). Only the sprite layer is redrawn.
         self.graphics.clear(LAYER_SPRITES)
-
         self._render_pacman()
-
-        self.graphics.visualise_dot(
-            self._to_visual_x,
-            self._to_visual_y,
-            layer=LAYER_SPRITES,
-        )
-
+        # self.graphics.visualise_dot(
+        #    self._to_visual_x,
+        #    self._to_visual_y,
+        #    layer=LAYER_SPRITES,
+        # )
         self.graphics.refresh()
-
-        return self._self_app_state
+        return self._return_state(self._self_app_state)
 
     # ------------------------------------------------------------------
     # Layers
@@ -285,7 +269,7 @@ class GameScreen(Screen):
             if cell is None:
                 continue
 
-            color = WHITE if index % 2 == 0 else YELLOW
+            # color = WHITE if index % 2 == 0 else YELLOW
 
             # print(f"cell{index}:({cell.width},{cell.height})")
 
@@ -294,7 +278,7 @@ class GameScreen(Screen):
                 y=cell.y,
                 width=cell.width,
                 height=cell.height,
-                color=color,
+                color=BLACK,
                 layer=LAYER_MAZE,
             )
 
@@ -423,9 +407,6 @@ class GameScreen(Screen):
     def _rebuild_cache(self) -> None:
         """Rebuild pixel-based geometry and draw static layers."""
 
-        self._cache_width = self._width
-        self._cache_height = self._height
-
         self._cell_cache.clear()
         self._border_cache.clear()
         self._top_bar_cache.clear()
@@ -474,10 +455,8 @@ class GameScreen(Screen):
     def _cache_top_bar(self) -> None:
         """Cache top-bar rectangles in absolute pixel coordinates."""
 
-        top_bar_scale = 0
-
         for top_bar_name in self._top_bar_names:
-            if top_bar_scale == 0:
+            if self._top_bar_scale == 0:
                 rect = self.layout.get_rect_absolute(
                     top_bar_name,
                     self._width,
@@ -487,14 +466,14 @@ class GameScreen(Screen):
                 if rect is None or rect.text is None:
                     continue
 
-                top_bar_scale = rect.text.scale
+                self._top_bar_scale = rect.text.scale
 
             else:
                 rect = self.layout.get_rect_absolute(
                     top_bar_name,
                     self._width,
                     self._height,
-                    top_bar_scale,
+                    self._top_bar_scale,
                 )
 
             if rect is None:
@@ -510,10 +489,8 @@ class GameScreen(Screen):
     def _cache_values(self) -> None:
         """Cache top-bar value rectangles in absolute coordinates."""
 
-        value_scale = 0
-
         for value_name in self._value_names:
-            if value_scale == 0:
+            if self._value_scale == 0:
                 rect = self.layout.get_rect_absolute(
                     value_name,
                     self._width,
@@ -523,14 +500,14 @@ class GameScreen(Screen):
                 if rect is None or rect.text is None:
                     continue
 
-                value_scale = rect.text.scale
+                self._value_scale = rect.text.scale
 
             else:
                 rect = self.layout.get_rect_absolute(
                     value_name,
                     self._width,
                     self._height,
-                    value_scale,
+                    self._value_scale,
                 )
 
             if rect is None:
@@ -540,7 +517,7 @@ class GameScreen(Screen):
 
             if rect.text is not None:
                 rect.text.color = WHITE
-            print("cached text:", rect.text.text)
+                # print("cached text:", rect.text.text)
             self._value_cache[value_name] = rect
 
     def _cache_pacgums(self) -> None:
@@ -567,6 +544,7 @@ class GameScreen(Screen):
             )
 
             if abs_circle is None:
+                print(f"NIGGER for {super_pacgum_name}")
                 continue
 
             abs_circle.color = PACGUM_COLOR
@@ -581,7 +559,8 @@ class GameScreen(Screen):
     def _make_maze(self) -> None:
         """Generate the maze and create its percentage-based layout."""
 
-        lvl = self.config.levels[self.LEVEL]
+        lvl = self.config.levels[self._level]
+        print(lvl)
 
         self._maze_gen.generate()
 
@@ -756,7 +735,7 @@ class GameScreen(Screen):
     def _make_pacgums(self) -> None:
         """Create the initial pac-gum distribution."""
 
-        lvl = self.config.levels[self.LEVEL]
+        lvl = self.config.levels[self._level]
 
         corners = {
             0,
@@ -795,7 +774,6 @@ class GameScreen(Screen):
             )
 
             self._pacgum_names.append(pacgum_name)
-
         for corner in corners:
             cell = self.layout.get_rect(
                 self._cell_names[corner]
@@ -807,7 +785,6 @@ class GameScreen(Screen):
             super_pacgum_name = (
                 f"{SUPER_PACGUM_PREFIX}{corner}"
             )
-
             self.layout.add_circle(
                 cell.xp + cell.widthp / 2,
                 cell.yp + cell.heightp / 2,
@@ -824,7 +801,7 @@ class GameScreen(Screen):
         self._to_visual_y = y
 
         i = 0
-
+        # print(self._pacgum_cache.keys())
         for pacgum_name in self._pacgum_names:
             abs_circle = self._pacgum_cache[pacgum_name]
 
@@ -834,21 +811,26 @@ class GameScreen(Screen):
                 del self._pacgum_cache[pacgum_name]
                 del self._pacgum_names[i]
                 self._score += self.config.points_per_pacgum
-                self.layout.change_text_rect(
-                    f"{VALUE_PREFIX}SCORE", str(self._score))
-                self._cache_values()
+                self._recache_value(f"{VALUE_PREFIX}SCORE", str(self._score))
+                # self._value_cache[f"{VALUE_PREFIX}SCORE"].text.text = str(
+                #    self._score)
 
                 self.graphics.clear(LAYER_PACGUMS)
                 self.graphics.clear(LAYER_VALUES)
                 self._render_pacgums()
                 self._render_values()
-
+                if not self._pacgum_names:
+                    # self.STARTED = False
+                    self._self_app_state = AppState.LEVEL_COMPLETE
                 return
-
             i += 1
-
+        # if i == 0:
+        #    print("NEW LEVEL")
+        #    self._level = 1
+        #    self._return_state(AppState.GAME)
+        #    self._start_screen()
+        #    return
         i = 0
-
         for super_pacgum_name in self._super_pacgum_names:
             abs_circle = self._super_pacgum_cache[
                 super_pacgum_name
@@ -867,7 +849,6 @@ class GameScreen(Screen):
                 self._render_values()
 
                 return
-
             i += 1
 
     # ------------------------------------------------------------------
@@ -945,10 +926,10 @@ class GameScreen(Screen):
         box_width = (top_bar_width - gap * 3) / 4
 
         labels = [
-            ("SCORE", "SCORE:"),
-            ("LIVES", "LIVES:"),
-            ("LEVEL", "LEVEL:"),
-            ("TIME", "TIME:"),
+            ("SCORE", "SCORE"),
+            ("LIVES", "LIVES"),
+            ("LEVEL", "LEVEL"),
+            ("TIME", "TIME"),
         ]
 
         current_x = 0.0
@@ -958,7 +939,8 @@ class GameScreen(Screen):
 
             self.layout.add_rect(
                 xp=current_x,
-                yp=self.MARGIN_Y - self.BORDER_SIZE * 2,
+                # yp=self.MARGIN_Y - self.BORDER_SIZE * 2,
+                yp=self.BORDER_SIZE,
                 widthp=box_width,
                 heightp=self.TOPBAR_HEIGHT,
                 name=top_bar_name,
@@ -997,7 +979,8 @@ class GameScreen(Screen):
 
             self.layout.add_rect(
                 xp=current_x,
-                yp=self.MARGIN_Y * 1.5 - self.BORDER_SIZE * 2,
+                # yp=self.MARGIN_Y * 1.5 - self.BORDER_SIZE * 2,
+                yp=self.BORDER_SIZE + self.TOPBAR_HEIGHT / 2,
                 widthp=box_width,
                 heightp=self.TOPBAR_HEIGHT / 2,
                 name=value_name,
@@ -1008,3 +991,17 @@ class GameScreen(Screen):
             self._value_names.append(value_name)
 
             current_x += box_width + gap
+
+    def _recache_value(self, name: str, text: str) -> None:
+        self.layout.change_text_rect(name, text)
+        rect = self.layout.get_rect_absolute(
+            name,
+            self._width,
+            self._height,
+            self._value_scale
+        )
+        if rect is None or rect.text is None:
+            return
+        rect.color = BLACK
+        rect.text.color = WHITE
+        self._value_cache[name] = rect
