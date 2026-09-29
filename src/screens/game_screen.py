@@ -310,14 +310,14 @@ class GameScreen(Screen):
                 continue
 
             # Yellow background.
-            self.graphics.draw_rectangle(
-                x=top_bar_rect.x,
-                y=top_bar_rect.y,
-                width=top_bar_rect.width,
-                height=top_bar_rect.height,
-                color=YELLOW,
-                layer=LAYER_MAZE,
-            )
+            # self.graphics.draw_rectangle(
+            #    x=top_bar_rect.x,
+            #    y=top_bar_rect.y,
+            #    width=top_bar_rect.width,
+            #    height=top_bar_rect.height,
+            #    color=YELLOW,
+            #    layer=LAYER_MAZE,
+            # )
 
             # White label.
             if top_bar_rect.text is not None:
@@ -341,14 +341,14 @@ class GameScreen(Screen):
                 continue
 
             # Black background.
-            self.graphics.draw_rectangle(
-                x=value_rect.x,
-                y=value_rect.y,
-                width=value_rect.width,
-                height=value_rect.height,
-                color=BLACK,
-                layer=LAYER_VALUES,
-            )
+            # self.graphics.draw_rectangle(
+            #    x=value_rect.x,
+            #    y=value_rect.y,
+            #    width=value_rect.width,
+            #    height=value_rect.height,
+            #    color=BLACK,
+            #    layer=LAYER_VALUES,
+            # )
 
             # print(value_rect.text.text)
             # White value text.

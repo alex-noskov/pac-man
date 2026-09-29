@@ -89,5 +89,5 @@ def main() -> None:
         return
     config = parse(sys.argv[1])
     # return
-    app = App(config, AppState.GAME)
+    app = App(config, AppState.MAIN_MENU)
     app.start()
