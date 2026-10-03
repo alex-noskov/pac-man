@@ -10,6 +10,7 @@ class LevelCompleteScreen(Screen):
     """Level complete screen."""
 
     def __init__(self, graphics: Graphics) -> None:
+        """Build and cache the level-complete layout for the window."""
         self.graphics = graphics
         self._self_app_state = AppState.LEVEL_COMPLETE
 

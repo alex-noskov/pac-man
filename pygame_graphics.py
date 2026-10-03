@@ -4,13 +4,17 @@ from .src.font_map import FONT_MAP
 
 
 class Image:
+    """Store an image as a mutable matrix of packed pixel colors."""
+
     def __init__(self, width: int, height: int) -> None:
+        """Allocate a transparent pixel matrix with the given dimensions."""
         self.width = width
         self.height = height
         self.matrix = [[TRANSPARENT for _ in range(0, self.width)]
                        for _ in range(0, self.height)]
 
     def set_pixel(self, x: int, y: int, color: int) -> None:
+        """Set the pixel color, ignoring coordinates outside the image."""
         if not (0 <= x < self.width and 0 <= y < self.height):
             return
         self.matrix[y][x] = color
@@ -31,10 +35,12 @@ class Graphics:
         return pygame.event.get()
 
     def create_image(self, width: int, height: int) -> Image:
+        """Return a transparent image with the requested pixel dimensions."""
         return Image(width=width, height=height)
 
     def put_image(self, image: Image, x: int, y: int,
                   background_color: int = BLACK) -> None:
+        """Blit the image using background_color for transparent pixels."""
         surface = pygame.Surface((image.width, image.height))
         for iy in range(image.height):
             for ix in range(image.width):
@@ -48,6 +54,7 @@ class Graphics:
         self.window.blit(surface, (x, y))
 
     def clear(self, color: int) -> None:
+        """Fill the window with the RGB channels of the packed color."""
         r = (color >> 16) & 0xFF
         g = (color >> 8) & 0xFF
         b = color & 0xFF
@@ -61,6 +68,7 @@ class Graphics:
         height: int,
         color: int,
     ) -> None:
+        """Draw a filled rectangle with the given pixel bounds and color."""
         rect_image = self.create_image(width=width, height=height)
         for iy in range(rect_image.height):
             for ix in range(rect_image.width):
@@ -77,6 +85,7 @@ class Graphics:
         spacing: int = 1,
         scale: int = 1
     ) -> None:
+        """Blit scaled bitmap text with pixel spacing and background color."""
         char_width = 5
         char_height = 8
 
@@ -109,7 +118,9 @@ class Graphics:
         return self.window.get_size()
 
     def refresh(self) -> None:
+        """Present the current window contents by flipping the display."""
         pygame.display.flip()
 
     def quit(self) -> None:
+        """Shut down the initialized Pygame modules."""
         pygame.quit()

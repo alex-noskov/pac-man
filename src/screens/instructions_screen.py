@@ -10,6 +10,7 @@ class InstructionsScreen(Screen):
     """Instructions screen."""
 
     def __init__(self, graphics: Graphics) -> None:
+        """Build gameplay instructions and cache their window-sized layout."""
         self.graphics = graphics
         self._self_app_state = AppState.INSTRUCTIONS
 
@@ -29,8 +30,10 @@ class InstructionsScreen(Screen):
             "YOU START WITH A LIMITED NUMBER OF LIVES",
             "POWER PELLETS MAKE GHOSTS VULNERABLE",
             "EAT VULNERABLE GHOSTS FOR BONUS POINTS",
-            "BONUS ITEMS CAN APPEAR IN THE MAZE",
-            "COLLECT BONUS ITEMS FOR EXTRA POINTS",
+            "ESC OR P PAUSES - ENTER RESUMES",
+            "C TOGGLES EVALUATION CHEATS",
+            "CHEATS I INVINCIBLE N SKIP F FREEZE",
+            "CHEATS L LIFE B SPEED V POWER",
             "CLEAR THE MAZE TO ADVANCE",
             "LOSE ALL LIVES AND THE GAME IS OVER",
             "CLEAR ALL 10 LEVELS TO WIN",
@@ -74,7 +77,8 @@ class InstructionsScreen(Screen):
         return self._self_app_state
 
     def _gen_layout(self) -> None:
-        line_height = 5
+        """Arrange instructions and the return hint in percentage space."""
+        line_height = 4
         line_spacing = 1
 
         total_height = (
@@ -111,6 +115,7 @@ class InstructionsScreen(Screen):
         self.layout.center_rect_x("BACK_INFO")
 
     def _cache_abs_layout(self) -> None:
+        """Cache pixel geometry and text colors for the instruction labels."""
         for name in self.layout.get_rect_names():
             abs_rect = self.layout.get_rect_absolute(
                 name,

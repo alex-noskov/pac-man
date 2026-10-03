@@ -1,12 +1,10 @@
-# import pygame
-# import time
 from .screen import Screen
 from ..models import AppState
-# from ..graphics import Graphics
 from ..graphics import Graphics
 from ..colors import YELLOW, BLACK, BLUE, PURPLE, ORANGE, WHITE
 from ..ui import Layout, AbsoluteRect
 from ..events import Event, EventType
+from ..highscores import HighscoreStore
 
 
 BACKGROUND_COLOR = BLACK
@@ -20,16 +18,17 @@ class MainMenuScreen(Screen):
     """Main application menu."""
 
     def __init__(self, graphics: Graphics) -> None:
+        """Build the menu layout and highlight the initial button."""
         self.graphics = graphics
+        self.store: HighscoreStore | None = None
         self.layout = Layout()
         self._self_app_state = AppState.MAIN_MENU
-        print("EST CONTACT!")
+
         sizes = self.graphics.get_window_size()
         self._width: int = sizes[0]
         self._height: int = sizes[1]
         self._cache: dict[str, AbsoluteRect] = {}
-        # self._hovered_rect: str | None = None
-        self._buttons: list = []
+        self._buttons: list[str] = []
         self._gen_layout()
         self._cache_abs_layout()
         self._selected = 0
@@ -51,25 +50,6 @@ class MainMenuScreen(Screen):
                 self._set_rect_colors(self._buttons[self._selected], True)
         elif event.type == EventType.KEY_ENTER:
             return AppState[self._buttons[self._selected]]
-        # print(event)
-        # if event.type == pygame.MOUSEMOTION:
-        #    hovered_rect = None
-        #    for abs_rect in self._cache.values():
-        #        if abs_rect.contains(event.pos[0], event.pos[1]):
-        #            hovered_rect = abs_rect.name
-        #            break
-        #    if hovered_rect != self._hovered_rect:
-        #        if self._hovered_rect is not None:
-        #            self._set_rect_colors(
-        #                self._hovered_rect,
-        #                hovered=False
-        #            )
-        #        if hovered_rect is not None:
-        #            self._set_rect_colors(
-        #                hovered_rect,
-        #                hovered=True
-        #            )
-        #        self._hovered_rect = hovered_rect
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -78,13 +58,10 @@ class MainMenuScreen(Screen):
 
     def render(self) -> AppState:
         """Render the screen."""
-        # return self._self_app_state
 
-        # t = time.perf_counter()
         self.graphics.clear()
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
-        # t1 = time.perf_counter()
         for abs_rect in self._cache.values():
             self.graphics.draw_rectangle(
                 x=abs_rect.x,
@@ -102,18 +79,18 @@ class MainMenuScreen(Screen):
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
-        # t2 = time.perf_counter()
-        # self.graphics.draw_text("NADPIS", 100, 100, YELLOW, scale=10)
+        if self.store is not None and self.store.entries:
+            best = self.store.entries[0]
+            text = f"BEST {best['name'].upper()} {best['score']}"
+            scale = max(1, min(3, (self._width - 40) // (len(text) * 6)))
+            self.graphics.draw_text(
+                text, max(10, (self._width - len(text) * 6 * scale) // 2),
+                self._height // 12, WHITE, scale=scale, spacing=scale)
         self.graphics.refresh()
-        # t3 = time.perf_counter()
-        # print(
-        #    f"clear={t1-t:.6f} "
-        #    f"draw={t2-t1:.6f} "
-        #    f"refresh={t3-t2:.6f}"
-        # )
         return self._self_app_state
 
     def _set_rect_colors(self, name: str, hovered: bool) -> None:
+        """Apply selected or default colors to the named cached button."""
         rect = self._cache.get(name)
         if rect is None:
             return
@@ -126,16 +103,12 @@ class MainMenuScreen(Screen):
         if rect.text is not None:
             rect.text.color = text_color
 
-    # def _remove_cache(self, name: str) -> None:
-    #    del self._cache[name]
-
     def _gen_layout(self) -> None:
+        """Build centered menu buttons and the keyboard navigation hint."""
         self.layout.add_rect(xp=0, yp=20, widthp=25,
                              heightp=10, name="GAME", text="PLAY",
                              x_offsetp=5, x_offsetp_rev=5)
         self.layout.center_rect_x("GAME")
-        # print(self.layout.get_rect_absolute("PLAY_TEXT",
-        #      width=self._width, height=self._height).text.scale)
         self.layout.add_rect(xp=0, yp=35, widthp=25,
                              heightp=10, name="HIGHSCORES", text="HIGHSCORES",
                              x_offsetp=5, x_offsetp_rev=5)
@@ -149,9 +122,7 @@ class MainMenuScreen(Screen):
                                                          height=self._height)
         if abs_instructions is not None and abs_instructions.text is not None:
             self._menu_scale = abs_instructions.text.scale
-        print("MAIN MENUE SCALE:", self._menu_scale)
-        # print(self.layout.get_rect_absolute("INSTRUCTIONS_TEXT",
-        #      width=self._width, height=self._height).text.scale)
+
         self.layout.add_rect(xp=0, yp=65, widthp=25,
                              heightp=10, name="EXIT", text="EXIT",
                              x_offsetp=5, x_offsetp_rev=5)
@@ -160,11 +131,10 @@ class MainMenuScreen(Screen):
                              heightp=2, name="CONTROL_INFO",
                              text="use arrow up and down to move",)
         self.layout.center_rect_x("CONTROL_INFO")
-        # print(self.layout.get_rect_absolute("EXIT_TEXT",
-        #      width=self._width, height=self._height).text.scale)
         self._buttons = ["GAME", "HIGHSCORES", "INSTRUCTIONS", "EXIT"]
 
     def _cache_abs_layout(self) -> None:
+        """Cache pixel geometry with shared button scale and default colors."""
         for button_name in self._buttons:
             abs_rect = self.layout.get_rect_absolute(button_name,
                                                      self._width,

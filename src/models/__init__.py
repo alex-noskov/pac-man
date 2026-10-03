@@ -17,6 +17,8 @@ class AppState(Enum):
 
 
 class Directions(Enum):
+    """Define grid movement vectors, including the stationary direction."""
+
     UP = (0, -1)
     RIGHT = (1, 0)
     DOWN = (0, 1)

@@ -4,13 +4,16 @@ from ..graphics import Graphics
 from ..colors import WHITE, BLACK, YELLOW
 from ..events import Event, EventType
 from ..ui import Layout, AbsoluteRect
+from ..highscores import HighscoreStore
 
 
 class HighscoresScreen(Screen):
     """Highscores screen."""
 
     def __init__(self, graphics: Graphics) -> None:
+        """Build and cache the highscores layout for the graphics window."""
         self.graphics = graphics
+        self.store: HighscoreStore | None = None
         self._self_app_state = AppState.HIGHSCORES
 
         sizes = self.graphics.get_window_size()
@@ -28,8 +31,8 @@ class HighscoresScreen(Screen):
         if event.type == EventType.KEY_ESC:
             return AppState.MAIN_MENU
 
-        # if event.type == EventType.CLOSE:
-        #    return AppState.EXIT
+        if event.type == EventType.CLOSE:
+            return AppState.EXIT
 
         return self._self_app_state
 
@@ -53,11 +56,24 @@ class HighscoresScreen(Screen):
                     scale=abs_rect.text.scale,
                 )
 
+        entries = self.store.entries if self.store is not None else []
+        rows = [f"{i + 1:2} {e['name'].upper():10} {e['score']}"
+                for i, e in enumerate(entries)] or ['NO HIGHSCORES YET']
+        for index, text in enumerate(rows):
+            scale = max(1, min(3, (self._width - 40) // (len(text) * 6)))
+            self.graphics.draw_text(
+                text, max(10, (self._width - len(text) * 6 * scale) // 2),
+                self._height // 4 + index * self._height // 18,
+                WHITE, scale=scale, spacing=scale)
+        if self.store is not None and self.store.error:
+            self.graphics.draw_text('HIGHSCORE FILE ERROR - SEE CONSOLE',
+                                    10, self._height * 9 // 10, YELLOW)
         self.graphics.refresh()
 
         return self._self_app_state
 
     def _gen_layout(self) -> None:
+        """Add percentage-based title and return-instruction rectangles."""
         # HIGHSCORES title: 20% down from the top.
         self.layout.add_rect(
             xp=0,
@@ -83,6 +99,7 @@ class HighscoresScreen(Screen):
         self.layout.center_rect_x("BACK_INFO")
 
     def _cache_abs_layout(self) -> None:
+        """Cache pixel geometry and text colors for the static labels."""
         for name in ("TITLE", "BACK_INFO"):
             abs_rect = self.layout.get_rect_absolute(
                 name,

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, call, patch
 from src.events import EventFactory
 from src.models import AppState
 from src.pac_man import App, main
+from src.parsing import Config
 
 
 class RecordingScreen:
@@ -81,12 +82,12 @@ class MainEntryPointTests(unittest.TestCase):
 
 class AppConstructionTests(unittest.TestCase):
     def test_constructor_shares_graphics_between_screens(self) -> None:
-        config = MagicMock(window_width=800, window_height=600)
+        config = Config(window_width=800, window_height=600)
         graphics = object()
-        game_screen = object()
-        main_menu = object()
+        game_screen = MagicMock()
+        main_menu = MagicMock()
         instructions = object()
-        highscores = object()
+        highscores = MagicMock()
         level_complete = object()
         exit_screen = object()
 
@@ -144,6 +145,10 @@ class AppConstructionTests(unittest.TestCase):
                 AppState.HIGHSCORES,
                 AppState.LEVEL_COMPLETE,
                 AppState.EXIT,
+                AppState.PAUSE,
+                AppState.GAME_OVER,
+                AppState.VICTORY,
+                AppState.ERROR,
             },
         )
 
@@ -256,7 +261,7 @@ class AppLoopTests(unittest.TestCase):
         with patch("src.pac_man.time.sleep"), patch("builtins.print"):
             app.app_loop(deque([close_event]))
 
-        self.assertEqual(timeline, [("menu", "handle_event", close_event)])
+        self.assertEqual(timeline, [])
         self.assertEqual(app.state, AppState.EXIT)
         cast(MagicMock, app.graphics.stop_loop).assert_called_once_with()
 
@@ -301,6 +306,17 @@ class AppLoopTests(unittest.TestCase):
 
 
 class ResourceFailureTests(unittest.TestCase):
+    def test_screen_initialization_failure_releases_graphics(self) -> None:
+        """An error before App.start must release its native resources."""
+        graphics = MagicMock()
+        graphics.get_window_size.return_value = (800, 600)
+        with (patch('src.pac_man.Graphics', return_value=graphics),
+              patch('src.pac_man.InstructionsScreen',
+                    side_effect=RuntimeError('screen init failed'))):
+            with self.assertRaises(RuntimeError):
+                App(Config())
+        graphics.quit.assert_called_once_with()
+
     def test_start_releases_graphics_when_loop_fails(self) -> None:
         """Native resources must be released even on a loop failure."""
         app = App.__new__(App)

@@ -3,10 +3,13 @@ from .models import Directions
 
 
 class PacMan:
+    """Track Pac-Man's pixel position and buffered grid-based movement."""
+
     def __init__(self, x: int, y: int,
                  cell_size: int, size: int,
                  speed: int,
                  def_dir: Directions = Directions.STOP) -> None:
+        """Set pixel geometry, grid spacing, speed, and initial direction."""
         self.size = size
         self.bit_map = self._generate_circle_bitmap(size)
         self.x = x
@@ -26,6 +29,7 @@ class PacMan:
         self._target_y = y
 
     def _generate_circle_bitmap(self, size: int) -> str:
+        """Return a flattened binary circle bitmap of the given square size."""
         center = (size - 1) / 2
         radius = size / 2
         bitmap = []
@@ -43,6 +47,7 @@ class PacMan:
         return "".join(bitmap)
 
     def set_direction(self, direction: Directions) -> None:
+        """Buffer the requested direction for the next available grid turn."""
         self.desired_direction = direction
 
     def is_aligned(self) -> bool:
@@ -98,10 +103,12 @@ class PacMan:
         return departed
 
     def _step_towards_target(self) -> None:
+        """Advance pixel coordinates toward their targets without overshoot."""
         self.x += self._clamp_step(self._target_x - self.x)
         self.y += self._clamp_step(self._target_y - self.y)
 
     def _clamp_step(self, distance: int) -> int:
+        """Return a signed step bounded by speed and remaining distance."""
         if distance == 0:
             return 0
         step = self.speed if distance > 0 else -self.speed
