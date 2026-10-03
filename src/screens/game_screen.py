@@ -9,6 +9,10 @@ from ..events import Event, EventType
 from ..graphics import Graphics
 from ..models import AppState, Directions
 from ..parsing import Config
+from ..ui import NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE, HUD_TEXT_SCALE
+
+HUD_HEIGHT = 80
+MAZE_MARGIN = 20
 
 if TYPE_CHECKING:
     from ..session import GameSession
@@ -101,10 +105,10 @@ class GameScreen(Screen):
         self._last_update = now
         return self.session.state
 
-    def _text(self, text: str, y: int, color: int = WHITE) -> None:
-        """Draw centered text with an integer scale that fits the window."""
+    def _text(self, text: str, y: int, color: int = WHITE,
+              scale: int = NORMAL_TEXT_SCALE) -> None:
+        """Draw centered text using a fixed font size."""
         width, _ = self.graphics.get_window_size()
-        scale = max(1, min(3, (width - 40) // max(1, len(text) * 6)))
         self.graphics.draw_text(text.upper(),
                                 max(8, (width - len(text) * 6 * scale) // 2),
                                 y, color, scale=scale, spacing=scale)
@@ -116,8 +120,8 @@ class GameScreen(Screen):
         if s.state == AppState.ERROR:
             g.set_layer_order(['main'])
             g.fill(BLACK)
-            self._text('MAZE GENERATION FAILED', 100, YELLOW)
-            self._text(s.error[:90], 160)
+            self._text('MAZE GENERATION FAILED', 100, YELLOW, TITLE_TEXT_SCALE)
+            self._text(s.error[:60], 160)
             self._text('ENTER / ESC - MAIN MENU', 220)
             g.refresh()
             return s.state
@@ -125,10 +129,12 @@ class GameScreen(Screen):
         if maze is None:
             return AppState.ERROR
         width, height = g.get_window_size()
-        cell = max(1, min((width - 40) // maze.width,
-                          (height - 130) // maze.height))
+        maze_height = height - HUD_HEIGHT - 2 * MAZE_MARGIN
+        cell = max(1, min((width - 2 * MAZE_MARGIN) // maze.width,
+                          maze_height // maze.height))
         left = (width - cell * maze.width) // 2
-        top = 90 + (height - 130 - cell * maze.height) // 2
+        top = (HUD_HEIGHT + MAZE_MARGIN
+               + (maze_height - cell * maze.height) // 2)
         if self._maze_cached is not maze:
             g.create_layer('maze')
             g.create_layer('actors')
@@ -172,20 +178,22 @@ class GameScreen(Screen):
         hud = (f'SCORE {s.score}   LIVES {s.lives}   '
                f'LEVEL {s.level_index + 1}   '
                f'TIME {math.ceil(s.time_remaining)}')
-        scale = max(1, min(3, (width - 20) // (len(hud) * 6)))
+        scale = HUD_TEXT_SCALE
         g.draw_text(hud, 10, 12, WHITE, scale=scale, spacing=scale,
                     layer='actors')
         status = 'ESC/P PAUSE   C CHEATS'
         if s.cheat_enabled:
             status = (f'CHEATS I:{int(s.invincible)} F:{int(s.ghosts_frozen)} '
                       'N:SKIP L:LIFE B:SPEED V:POWER')
-        g.draw_text(status, 10, 48, YELLOW, layer='actors')
+        g.draw_text(status, 10, 48, YELLOW, scale=HUD_TEXT_SCALE,
+                    spacing=HUD_TEXT_SCALE, layer='actors')
         if s.state == AppState.PAUSE:
             g.draw_rectangle(width // 4, height // 3, width // 2,
                              height // 3, BLACK, layer='actors')
             for i, label in enumerate(('RESUME', 'MAIN MENU')):
                 g.draw_text(('> ' if i == self._pause_selected else '  ')
                             + label, width // 3, height // 3 + 40 + i * 40,
-                            YELLOW, scale=2, layer='actors')
+                            YELLOW, scale=NORMAL_TEXT_SCALE,
+                            spacing=NORMAL_TEXT_SCALE, layer='actors')
         g.refresh()
         return s.state

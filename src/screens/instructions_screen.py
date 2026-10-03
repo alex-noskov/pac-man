@@ -3,7 +3,7 @@ from ..models import AppState
 from ..graphics import Graphics
 from ..colors import WHITE, BLACK, YELLOW
 from ..events import Event, EventType
-from ..ui import Layout, AbsoluteRect
+from ..ui import Layout, AbsoluteRect, NORMAL_TEXT_SCALE
 
 
 class InstructionsScreen(Screen):
@@ -121,6 +121,7 @@ class InstructionsScreen(Screen):
                 name,
                 self._width,
                 self._height,
+                NORMAL_TEXT_SCALE,
             )
 
             if abs_rect is None:

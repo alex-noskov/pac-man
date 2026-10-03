@@ -5,6 +5,14 @@ from ..events import Event, EventType
 from ..graphics import Graphics
 from ..highscores import HighscoreStore
 from ..models import AppState
+from ..ui import NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE
+
+NAME_BOX_WIDTH = 600
+NAME_BOX_HEIGHT = 48
+NAME_BOX_Y = 280
+SAVE_BUTTON_WIDTH = 560
+SAVE_BUTTON_HEIGHT = 48
+SAVE_BUTTON_Y = 390
 
 
 class EndScreen(Screen):
@@ -54,28 +62,26 @@ class EndScreen(Screen):
     def render(self) -> AppState:
         """Present an unmistakable keyboard field and save confirmation."""
         g = self.graphics
-        width, height = g.get_window_size()
+        width, _ = g.get_window_size()
         g.set_layer_order(['main'])
         g.fill(BLACK)
         self._line('VICTORY - CONGRATULATIONS'
                    if self.state == AppState.VICTORY else 'GAME OVER',
-                   height * 12 // 100, YELLOW)
-        self._line(f'FINAL SCORE {self.score}', height * 24 // 100)
+                   70, YELLOW, scale=TITLE_TEXT_SCALE)
+        self._line(f'FINAL SCORE {self.score}', 126)
         self._line('TYPE ON YOUR KEYBOARD TO ENTER YOUR NAME',
-                   height * 36 // 100)
+                   194)
         self._line('SAVE FAILED - ENTER TO RETRY' if self.message
                    else 'MAX 10: LETTERS / DIGITS / SPACES',
-                   height * 43 // 100, YELLOW)
+                   238, YELLOW)
 
-        box_width = width * 3 // 4
-        box_height = max(32, min(80, height // 9))
-        left, top = (width - box_width) // 2, height // 2
+        box_width, box_height = NAME_BOX_WIDTH, NAME_BOX_HEIGHT
+        left, top = (width - box_width) // 2, NAME_BOX_Y
         g.draw_rectangle(left, top, box_width, box_height, YELLOW)
         g.draw_rectangle(left + 2, top + 2, box_width - 4,
                          box_height - 4, 0xFF18243B)
         text = self.name.upper() if self.name else 'TYPE YOUR NAME HERE'
-        scale = max(1, min(3, (box_width - 24) // (len(text) * 6),
-                           (box_height - 8) // 8))
+        scale = NORMAL_TEXT_SCALE
         text_x = (width - len(text) * 6 * scale) // 2
         text_y = top + (box_height - 8 * scale) // 2
         g.draw_text(text, text_x, text_y, WHITE,
@@ -84,29 +90,23 @@ class EndScreen(Screen):
             g.draw_rectangle(text_x + len(text) * 6 * scale + 2,
                              text_y, 2, 8 * scale, YELLOW)
 
-        button_width = width * 4 // 5
-        button_height = max(24, min(64, height // 12))
-        button_top = height * 72 // 100
+        button_width, button_height = SAVE_BUTTON_WIDTH, SAVE_BUTTON_HEIGHT
+        button_top = SAVE_BUTTON_Y
         g.draw_rectangle((width - button_width) // 2, button_top,
                          button_width, button_height, YELLOW)
         self._line('PRESS ENTER TO SAVE SCORE',
-                   button_top + button_height // 2, BLACK,
-                   max_scale=max(1, (button_height - 8) // 8))
+                   button_top + button_height // 2, BLACK)
         self._line('BACKSPACE TO EDIT   ESC TO SKIP SAVING',
-                   height * 88 // 100)
+                   482)
         if self.message:
-            limit = max(1, (width - 40) // 6)
-            self._line(self.message[:limit], height * 95 // 100, YELLOW,
-                       max_scale=1)
+            self._line(self.message[:60], 530, YELLOW)
         g.refresh()
         return self.state
 
     def _line(self, text: str, center_y: int, color: int = WHITE,
-              max_scale: int = 3) -> None:
-        """Center a readable bitmap line within the native window bounds."""
+              scale: int = NORMAL_TEXT_SCALE) -> None:
+        """Center a line using an explicit fixed bitmap font size."""
         width, _ = self.graphics.get_window_size()
-        scale = max(1, min(max_scale, 3,
-                           (width - 40) // max(1, len(text) * 6)))
         self.graphics.draw_text(text.upper(),
                                 (width - len(text) * 6 * scale) // 2,
                                 center_y - 4 * scale, color,

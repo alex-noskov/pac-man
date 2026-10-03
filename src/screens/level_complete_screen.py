@@ -1,9 +1,9 @@
 from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
-from ..colors import WHITE, BLACK, YELLOW
+from ..colors import BLACK, YELLOW
 from ..events import Event, EventType
-from ..ui import Layout, AbsoluteRect
+from ..ui import Layout, AbsoluteRect, TITLE_TEXT_SCALE
 
 
 class LevelCompleteScreen(Screen):
@@ -65,7 +65,7 @@ class LevelCompleteScreen(Screen):
                     text=abs_rect.text.text,
                     x=abs_rect.text.x,
                     y=abs_rect.text.y,
-                    color=WHITE,
+                    color=BLACK,
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
@@ -96,6 +96,7 @@ class LevelCompleteScreen(Screen):
             "LEVEL_COMPLETE",
             self._width,
             self._height,
+            TITLE_TEXT_SCALE,
         )
 
         if abs_rect is None:
@@ -104,6 +105,6 @@ class LevelCompleteScreen(Screen):
         abs_rect.color = YELLOW
 
         if abs_rect.text is not None:
-            abs_rect.text.color = WHITE
+            abs_rect.text.color = BLACK
 
         self._cache["LEVEL_COMPLETE"] = abs_rect

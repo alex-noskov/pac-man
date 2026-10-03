@@ -1,6 +1,11 @@
 from copy import copy
 import math
 
+# Fixed bitmap magnification: base glyphs are 5 pixels wide, 8 high.
+NORMAL_TEXT_SCALE = 2
+TITLE_TEXT_SCALE = 3
+HUD_TEXT_SCALE = 2
+
 
 class Circle:
     """Represent a named circle using percentage coordinates and radius."""

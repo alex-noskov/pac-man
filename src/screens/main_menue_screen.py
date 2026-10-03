@@ -2,7 +2,7 @@ from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
 from ..colors import YELLOW, BLACK, BLUE, PURPLE, ORANGE, WHITE
-from ..ui import Layout, AbsoluteRect
+from ..ui import Layout, AbsoluteRect, NORMAL_TEXT_SCALE
 from ..events import Event, EventType
 from ..highscores import HighscoreStore
 
@@ -82,7 +82,7 @@ class MainMenuScreen(Screen):
         if self.store is not None and self.store.entries:
             best = self.store.entries[0]
             text = f"BEST {best['name'].upper()} {best['score']}"
-            scale = max(1, min(3, (self._width - 40) // (len(text) * 6)))
+            scale = NORMAL_TEXT_SCALE
             self.graphics.draw_text(
                 text, max(10, (self._width - len(text) * 6 * scale) // 2),
                 self._height // 12, WHITE, scale=scale, spacing=scale)
@@ -117,11 +117,7 @@ class MainMenuScreen(Screen):
                              heightp=10, name="INSTRUCTIONS",
                              text="INSTRUCTIONS", x_offsetp=5, x_offsetp_rev=5)
         self.layout.center_rect_x("INSTRUCTIONS")
-        abs_instructions = self.layout.get_rect_absolute("INSTRUCTIONS",
-                                                         width=self._width,
-                                                         height=self._height)
-        if abs_instructions is not None and abs_instructions.text is not None:
-            self._menu_scale = abs_instructions.text.scale
+        self._menu_scale = NORMAL_TEXT_SCALE
 
         self.layout.add_rect(xp=0, yp=65, widthp=25,
                              heightp=10, name="EXIT", text="EXIT",
@@ -148,7 +144,8 @@ class MainMenuScreen(Screen):
             self._cache[abs_rect.name] = abs_rect
         abs_control_info = self.layout.get_rect_absolute("CONTROL_INFO",
                                                          self._width,
-                                                         self._height)
+                                                         self._height,
+                                                         NORMAL_TEXT_SCALE)
         if abs_control_info is not None:
             abs_control_info.color = BLACK
             if abs_control_info.text is not None:

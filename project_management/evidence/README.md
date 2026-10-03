@@ -7,6 +7,21 @@ focus or interacting with other applications.
 
 ## Current name-entry UI (use these for acceptance)
 
+The latest fixed **1024x640** window captures are:
+
+- `fixed-main-menu.png`, `fixed-instructions.png`, `fixed-highscores.png`:
+  readable fixed-size menu text and visible navigation hints.
+- `fixed-gameplay.png`, `fixed-largest-maze.png`: HUD and complete first/final
+  mazes in the available space, without clipping.
+- `fixed-pause.png`: readable pause choices with the HUD still visible.
+- `fixed-game-over-empty.png`, `fixed-game-over-name.png`: fully visible loss
+  prompt/input/save action, including visible `LAPTOP` keyboard input.
+- `fixed-victory-name.png`: fully visible victory input with `LAPTOP` typed.
+- `fixed-level-complete.png`: fixed-size completion title.
+
+Normal and HUD glyphs use fixed scale 2; titles use fixed scale 3. These captures
+supersede the larger-window screenshots below for laptop-size acceptance.
+
 | Screenshot | What it demonstrates |
 | --- | --- |
 | [game-over-name-empty.png](game-over-name-empty.png) | Game Over: explicit keyboard instruction, bordered name field with visible placeholder, prominent Enter-to-save confirmation |

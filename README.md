@@ -93,7 +93,7 @@ seed 41 and a 499-second timer; it is not a dump of the defaults below.
 | `points_per_ghost` | 200 | Integer 15..5000 |
 | `seed` | `"42"` | Positive integer or integer string, 1..2147483647 |
 | `level_max_time` | 90 | Integer 1..500 seconds; expiration ends the game |
-| `window_width`, `window_height` | 2000, 1000 | 320..3840 and 240..2160; actual window is capped to the native display minus a decoration margin |
+| `window_width`, `window_height` | 1024, 640 | 800..3840 and 600..2160; actual window is capped to the native display minus a decoration margin |
 | `power_duration` | 8 | Finite number 0.1..120 seconds |
 | `ghost_respawn_time` | 5 | Finite number 0.1..120 seconds |
 | `player_speed`, `ghost_speed` | 5, 4 | Finite number 0.1..30 cells/second |
@@ -140,6 +140,26 @@ the player. Generator failures show a recoverable error screen with a return to
 menu, rather than replacing the assigned generator with a private implementation.
 
 ## Implementation
+
+### Fixed UI sizes
+
+The supplied configuration and fallback defaults both use a **1024x640** window
+to fit a normal laptop screen. UI text uses fixed bitmap magnification, not
+automatic font fitting. The original `Layout` remains in use for the menu
+positions; no responsive layout/scaling abstraction has been added.
+
+- Window: `config.json` (`window_width`, `window_height`), with fallback defaults
+  in `src/parsing.py`, `Config.window_width` and `Config.window_height`.
+- Normal/menu/name-entry text: `src/ui.py`, `NORMAL_TEXT_SCALE = 2`.
+- Titles: `src/ui.py`, `TITLE_TEXT_SCALE = 3`.
+- Gameplay HUD/status text: `src/ui.py`, `HUD_TEXT_SCALE = 2`.
+- Base glyphs are 5x8 pixels; scale 2 produces 10x16 glyphs and scale 3 gives
+  15x24 glyphs. Character spacing is passed explicitly alongside the font size.
+- Name box and save panel: the `NAME_BOX_*` and `SAVE_BUTTON_*` constants at the
+  top of `src/screens/end_screen.py`, with fixed vertical positions in `render`.
+- Maze space: `src/screens/game_screen.py`, `HUD_HEIGHT = 80` and
+  `MAZE_MARGIN = 20`. The existing cell-size calculation fits each level's maze
+  into the remaining space; it does not change the UI fonts.
 
 Positions are floating-point cell-center coordinates; turns and wall checks occur
 at reached centers. Rendering derives every pixel position from one integer cell

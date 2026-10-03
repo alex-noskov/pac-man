@@ -3,7 +3,7 @@ from ..models import AppState
 from ..graphics import Graphics
 from ..colors import WHITE, BLACK, YELLOW
 from ..events import Event, EventType
-from ..ui import Layout, AbsoluteRect
+from ..ui import Layout, AbsoluteRect, NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE
 from ..highscores import HighscoreStore
 
 
@@ -60,14 +60,16 @@ class HighscoresScreen(Screen):
         rows = [f"{i + 1:2} {e['name'].upper():10} {e['score']}"
                 for i, e in enumerate(entries)] or ['NO HIGHSCORES YET']
         for index, text in enumerate(rows):
-            scale = max(1, min(3, (self._width - 40) // (len(text) * 6)))
+            scale = NORMAL_TEXT_SCALE
             self.graphics.draw_text(
                 text, max(10, (self._width - len(text) * 6 * scale) // 2),
                 self._height // 4 + index * self._height // 18,
                 WHITE, scale=scale, spacing=scale)
         if self.store is not None and self.store.error:
             self.graphics.draw_text('HIGHSCORE FILE ERROR - SEE CONSOLE',
-                                    10, self._height * 9 // 10, YELLOW)
+                                    10, self._height * 9 // 10, YELLOW,
+                                    scale=NORMAL_TEXT_SCALE,
+                                    spacing=NORMAL_TEXT_SCALE)
         self.graphics.refresh()
 
         return self._self_app_state
@@ -105,6 +107,7 @@ class HighscoresScreen(Screen):
                 name,
                 self._width,
                 self._height,
+                TITLE_TEXT_SCALE if name == 'TITLE' else NORMAL_TEXT_SCALE,
             )
 
             if abs_rect is None:

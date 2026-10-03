@@ -52,8 +52,8 @@ class Config(BaseModel):
     points_per_pacgum: int = Field(default=10, ge=1, le=1000)
     points_per_super_pacgum: int = Field(default=50, ge=10, le=3000)
     points_per_ghost: int = Field(default=200, ge=15, le=5000)
-    window_width: int = Field(default=2000, ge=320, le=3840)
-    window_height: int = Field(default=1000, ge=240, le=2160)
+    window_width: int = Field(default=1024, ge=800, le=3840)
+    window_height: int = Field(default=640, ge=600, le=2160)
     seed: str = "42"
     level_max_time: int = Field(default=90, ge=1, le=500)
     power_duration: float = Field(default=8, ge=0.1, le=120,

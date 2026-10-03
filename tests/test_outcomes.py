@@ -39,9 +39,9 @@ class OutcomeTests(unittest.TestCase):
             self.assertNotIn('TYPE YOUR NAME HERE', texts)
 
     def test_input_and_buttons_fit_small_supported_windows(self) -> None:
-        """Name input and confirmation remain inside a 320x240 window."""
+        """Fixed input and confirmation fit the minimum 800x600 window."""
         graphics = MagicMock()
-        graphics.get_window_size.return_value = (320, 240)
+        graphics.get_window_size.return_value = (800, 600)
         screen = EndScreen(cast(Any, graphics),
                            HighscoreStore('unused.json'), AppState.GAME_OVER)
         screen.render()
@@ -51,9 +51,9 @@ class OutcomeTests(unittest.TestCase):
             spacing = call.kwargs.get('spacing', 1)
             text_width = len(text) * 5 * scale + (len(text) - 1) * spacing
             self.assertGreaterEqual(x, 0)
-            self.assertLessEqual(x + text_width, 320)
+            self.assertLessEqual(x + text_width, 800)
             self.assertGreaterEqual(y, 0)
-            self.assertLessEqual(y + 8 * scale, 240)
+            self.assertLessEqual(y + 8 * scale, 600)
 
     def test_win_and_loss_support_name_input_save_and_return(self) -> None:
         """Enter saves the displayed final score for either outcome."""
