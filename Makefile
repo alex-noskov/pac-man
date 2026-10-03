@@ -1,37 +1,35 @@
-DEF_CONFIG = config.json
-
-run:
-	uv run python3 -m src $(DEF_CONFIG)
+CONFIG ?= config.json
+UV_CACHE_DIR ?= $(CURDIR)/.uv-cache
+export UV_CACHE_DIR
+UV = uv run --no-sync
 
 install:
-	uv sync
+	uv sync --frozen
 
-lint:
-	flake8 --exclude=.venv .
-	mypy --exclude="^.venv/" . \
-	--warn-return-any \
-	--warn-unused-ignores \
-	--ignore-missing-imports \
-	--disallow-untyped-defs \
-	--check-untyped-defs
-
-lint-strict:
-	flake8 --exclude=.venv,data .
-	mypy --exclude="^.venv/|data/" . --strict
+run:
+	$(UV) python pac-man.py "$(CONFIG)"
 
 debug:
-	uv run python3 -m pdb src
+	$(UV) python -m pdb pac-man.py "$(CONFIG)"
+
+test:
+	$(UV) python -m unittest discover -s tests -v
+
+lint:
+	$(UV) flake8 .
+	$(UV) mypy . --warn-return-any --warn-unused-ignores \
+		--ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+
+lint-strict:
+	$(UV) flake8 .
+	$(UV) mypy . --strict
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	$(UV) python clean.py
 
-prompt:
-	cat src/*.py > prompt.txt
-	cat src/screens/*.py >> prompt.txt
-	cat src/mlx_wrapper/*.py >> prompt.txt
-	echo "\nStructure:\n" | cat  >> prompt.txt
-	ls -R src >> prompt.txt
-	xclip -selection clipboard < prompt.txt
+package:
+	$(UV) python package.py
 
-.PHONY: run install lint lint-strict debug clean prompt prompt_mlx
+validate: test lint
+
+.PHONY: install run debug test lint lint-strict clean package validate

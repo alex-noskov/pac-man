@@ -13,4 +13,7 @@ dependencies = [
 
 [tool.uv.sources]
 mazegenerator = { path = "mazegenerator-2.1.0-py3-none-any.whl" }
-mlx = { path = "mlx-2.2-py3-none-any.whl"}
+mlx = { path = "mlx-2.2-py3-none-any.whl" }
+
+[dependency-groups]
+dev = ["flake8>=7.0", "mypy>=1.10", "pyinstaller>=6.0"]

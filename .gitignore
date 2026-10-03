@@ -2,3 +2,11 @@
 __pycache__
 .mypy_cache
 prompt.txt
+.uv-cache/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+highscores.json
+*.tmp
