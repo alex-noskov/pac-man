@@ -8,7 +8,6 @@ dependencies = [
     "mlx",
     "mazegenerator",
     "pydantic>=2.13.4",
-    "pygame==2.6.1",
 ]
 
 [tool.uv.sources]

@@ -96,7 +96,7 @@ seed 41 and a 499-second timer; it is not a dump of the defaults below.
 | `window_width`, `window_height` | 1024, 640 | 800..3840 and 600..2160; actual window is capped to the native display minus a decoration margin |
 | `power_duration` | 8 | Finite number 0.1..120 seconds |
 | `ghost_respawn_time` | 5 | Finite number 0.1..120 seconds |
-| `player_speed`, `ghost_speed` | 5, 4 | Finite number 0.1..30 cells/second |
+| `player_speed`, `ghost_speed` | 5, 2 | Finite number 0.1..30 cells/second; all ghosts use the same `ghost_speed` |
 
 JSON booleans are not accepted as numeric settings. Malformed JSON, unreadable
 files, wrong extensions, invalid UTF-8, and invalid root objects fall back cleanly.
@@ -167,8 +167,14 @@ size, avoiding accumulated rounding drift. Time is monotonic elapsed seconds,
 not frame counts. The simulation subdivides updates and checks swept collisions,
 so actors cannot pass through each other between frames.
 
-Ghosts chase using shortest corridor-path distances, and choose greater distances
-while edible. Power duration, eaten-ghost respawn, and death-grace timers freeze
+All four ghosts use one simple local algorithm: inspect legal neighboring cells,
+compare horizontal plus vertical distance to the player, and choose a closer
+cell normally or a farther cell while edible. Normal ghosts avoid immediate
+backtracking when another exit exists; edible ghosts may reverse to flee.
+Randomness only breaks equally good choices. There are no personalities,
+shortest-path chase routes, or ghost distance caches. The one common speed setting
+is `ghost_speed` (default 2 cells/second), compared to the player's default 5.
+Power duration, eaten-ghost respawn, and death-grace timers freeze
 when paused. Death consumes one life, resets actors/directions to their spawns,
 and grants 1.5 seconds of immunity. Pellets, score and the remaining level timer
 survive death. Levels preserve score/lives; a new game resets the entire run.
@@ -198,13 +204,20 @@ pac-man.py / src.__main__
 - `src/events.py`: typed, native-independent actions and separate text events.
 - `src/graphics.py`, `src/mlx_wrapper/`: drawing, native input, and resource ownership.
 - `src/ui.py`, `src/font_map.py`, `src/colors.py`: retained layout and drawing data.
-- `src/game.py` and `pygame_graphics.py`: retained legacy/prototype utilities, not
-  imported by the active gameplay path; pygame is not the live graphical backend.
+- Obsolete pixel-movement and pygame prototypes were removed during the final
+  readability cleanup. There is one live movement model (`GameSession`) and one
+  graphics backend (MLX); historical prototypes remain available in Git history.
 
 ## Project Management
 
+For a short module-by-module walkthrough and the gameplay flow to practice
+explaining during evaluation, see [EVALUATION_GUIDE.md](EVALUATION_GUIDE.md).
+
 See [project_management](project_management/README.md) for actual milestones,
 design/risk decisions, regression coverage, native evidence, and release blockers.
+The four-reviewer readability findings, applied changes and deliberately retained
+mechanisms are summarized in
+[SIMPLICITY_REVIEW.md](project_management/SIMPLICITY_REVIEW.md).
 No invented historical schedule, team activity, or public-platform deployment is
 presented as completed work.
 

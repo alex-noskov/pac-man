@@ -31,14 +31,14 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(game.score, 2 * game.config.points_per_pacgum)
         self.assertAlmostEqual(game.player.x, 2.15)
 
-    def test_ghosts_chase_graph_distance_and_flee_when_powered(self) -> None:
+    def test_ghosts_chase_and_flee_when_powered(self) -> None:
         game = self.arena()
         game.player.x, game.player.y = 2.0, 1.0
         ghost = Ghost(1.0, 1.0, spawn=(0, 0))
         game.ghosts = [ghost]
         game.invincible = True
         game.update(0.1)
-        self.assertAlmostEqual(ghost.x, 1.4)
+        self.assertAlmostEqual(ghost.x, 1.0 + game.config.ghost_speed * 0.1)
         self.assertEqual(ghost.y, 1.0)
         ghost.x, ghost.y = 1.0, 1.0
         ghost.direction = Directions.STOP
@@ -46,18 +46,18 @@ class SessionTests(unittest.TestCase):
         game.update(0.1)
         self.assertGreater(abs(ghost.x - 2.0) + abs(ghost.y - 1.0), 1.0)
 
-    def test_ghost_uses_graph_not_manhattan_distance(self) -> None:
+    def test_ghost_uses_local_distance_without_pathfinding(self) -> None:
         game = self.arena()
-        # A winding single corridor: moving down first is a trap/dead-end;
-        # the shortest legal route to the player begins by moving up.
+        # The simple local rule chooses down even though the shortest full
+        # route starts upward. Finding that route is intentionally not AI work.
         game.maze = Maze(3, 3, [[9, 5, 3], [10, 15, 10], [14, 15, 14]])
         game.player.x, game.player.y = 2.0, 2.0
         game.pellets = {(1, 0)}
         ghost = Ghost(0.0, 1.0, spawn=(0, 1))
         game.ghosts = [ghost]
         game.update(0.1)
-        self.assertAlmostEqual(ghost.y, 0.6)
-        self.assertEqual(ghost.direction, Directions.UP)
+        self.assertAlmostEqual(ghost.y, 1.0 + game.config.ghost_speed * 0.1)
+        self.assertEqual(ghost.direction, Directions.DOWN)
 
     def test_touch_loses_only_one_life_and_resets_with_grace(self) -> None:
         game = self.arena()

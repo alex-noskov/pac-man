@@ -65,14 +65,7 @@ class ImageLayer:
 
     def fill(self, color: int) -> None:
         """Fill visible pixels with an ARGB opacity color."""
-        self._require_alive()
-        # MLX 2.2 returns a byte-order FORMAT, not host endianness.
-        pixel = (color & 0xFFFFFFFF).to_bytes(
-            4, "little" if self.endian == 0 else "big")
-        row = pixel * self.width
-        for y in range(self.height):
-            offset = y * self.line_length
-            self.data[offset:offset + len(row)] = row
+        self.put_rectangle(0, 0, self.width, self.height, color)
 
     def put_pixel(self, x: int, y: int, color: int) -> None:
         """Write one pixel, silently clipping out-of-bounds coordinates."""
@@ -91,6 +84,7 @@ class ImageLayer:
         top, bottom = max(0, y), min(self.height, y + height)
         if left >= right or top >= bottom:
             return
+        # MLX's format selects byte order; each row respects native padding.
         pixel = (color & 0xFFFFFFFF).to_bytes(
             4, "little" if self.endian == 0 else "big")
         row = pixel * (right - left)

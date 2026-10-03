@@ -80,7 +80,7 @@ class Graphics:
                   layer: str = "main") -> None:
         """Draw bitmap glyphs with pixel spacing and integer scale."""
         char_width = 5 * scale
-        # char_height = 8 * scale
+
         for char_index, char in enumerate(text):
             bitmap = FONT_MAP.get(char)
             if bitmap is None:
@@ -98,45 +98,3 @@ class Graphics:
                                 color=color,
                                 layer=layer,
                             )
-
-    def draw_image(self, x: int, y: int, bits: list[str], line_len: int,
-                   color: int, scale: int = 1,
-                   layer: str = "main") -> None:
-        """Draw scaled set bits, wrapping rows at the supplied line length."""
-        ix = iy = 0
-        for bit in bits:
-            if bit == "1":
-                for dy in range(scale):
-                    for dx in range(scale):
-                        self.mlx_wrapper.put_pixel(
-                            x=x + ix * scale + dx,
-                            y=y + iy * scale + dy,
-                            color=color,
-                            layer=layer,
-                        )
-            ix += 1
-            if ix == line_len:
-                ix = 0
-                iy += 1
-
-    def visualise_dot(self, x: int, y: int, layer: str = "main") -> None:
-        """Mark a pixel position with a purple diagonal cross."""
-        self.mlx_wrapper.put_pixel(x, y, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+1, y+1, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+2, y+2, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+3, y+3, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+4, y+4, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+1, y-1, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+2, y-2, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+3, y-3, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x+4, y-4, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-1, y+1, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-2, y+2, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-3, y+3, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-4, y+4, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-1, y-1, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-2, y-2, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-3, y-3, 0xFF800080, layer)
-        self.mlx_wrapper.put_pixel(x-4, y-4, 0xFF800080, layer)
-        # def get_mouse_position(self) -> tuple:
-        #    return self.mlx_wrapper.get_mouse_pos()

@@ -8,7 +8,7 @@ Linux with a graphical X11 session and system X11/OpenGL libraries is required.
 Do not run the executable alone without its _internal directory.
 
 CONTROLS
-Menu: arrow keys to select, Enter to confirm; mouse buttons are also supported.
+Menu: Up/Down or W/S to select, Enter to confirm. Navigation is keyboard-only.
 Movement: arrow keys or WASD.
 Pause: Esc or P; Enter resumes. Pause menu can return to the main menu.
 Close the window or choose Exit in the main menu to quit.
@@ -25,6 +25,7 @@ CONFIGURATION
 Edit config.json or pass another .json file. Lines beginning with # are ignored.
 Set levels (array of level_number/width/height), pacgum, seed, level_max_time,
 lives, window_width, window_height,
+player_speed, ghost_speed (2 cells/second by default for all four ghosts),
 points_per_pacgum, points_per_super_pacgum, points_per_ghost, and
 highscore_filename. Invalid values use safe defaults with diagnostic messages.
 Keep the configured highscore location writable to persist scores.

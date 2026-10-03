@@ -5,6 +5,25 @@ The source application was launched with `make run` and the supplied `config.jso
 Targeted X11 keypresses exercised the native event hooks without moving desktop
 focus or interacting with other applications.
 
+## Final readability pass
+
+The final source `make run` was exercised after the cleanup. These screenshots
+were opened and visually checked, not inferred from their filenames:
+
+- `final-readability-menu.png`: original Play/Highscores/Instructions/Exit order.
+- `final-readability-game.png`: live maze, four ghosts and readable HUD.
+- `final-readability-pause.png`: pause choices; resume and return to menu were
+  exercised through actual keys.
+- `final-readability-highscores.png`: the existing full ten-row score table.
+- `final-readability-instructions.png`: readable gameplay/cheat instructions.
+- `final-readability-packaged-menu.png`: rebuilt standalone native menu.
+
+Both the source and rebuilt executable exited through the Exit menu with code 0.
+The final source smoke run used C/I for safe inspection, did not submit a score,
+and does not establish full normal-play difficulty or every edible/respawn visual.
+The packaged smoke test establishes menu launch/exit, not full packaged gameplay.
+Earlier terminal-name-entry evidence below remains separate acceptance history.
+
 ## Current name-entry UI (use these for acceptance)
 
 The latest fixed **1024x640** window captures are:

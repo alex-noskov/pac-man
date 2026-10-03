@@ -30,7 +30,6 @@ class GameScreen(Screen):
             session = GameSession(config)
         self.session = session
         self.graphics = graphics
-        self.config = config
         self.clock = clock
         self._last_update = clock()
         self._pause_selected = 0

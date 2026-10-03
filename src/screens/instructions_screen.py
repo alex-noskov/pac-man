@@ -58,7 +58,6 @@ class InstructionsScreen(Screen):
 
     def render(self) -> AppState:
         """Render the screen."""
-        self.graphics.clear()
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
         for abs_rect in self._cache.values():

@@ -62,7 +62,7 @@ class Config(BaseModel):
                                       allow_inf_nan=False)
     player_speed: float = Field(default=5, ge=0.1, le=30,
                                 allow_inf_nan=False)
-    ghost_speed: float = Field(default=4, ge=0.1, le=30,
+    ghost_speed: float = Field(default=2, ge=0.1, le=30,
                                allow_inf_nan=False)
 
     @field_validator('*', mode='before')
@@ -196,7 +196,6 @@ def validate_with_field_defaults(
         return Config.model_validate(raw_config)
 
     except ValidationError as error:
-        defaults = Config()
         default_data = defaults.model_dump()
         fixed_config = dict(raw_config)
 

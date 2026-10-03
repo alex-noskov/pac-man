@@ -28,11 +28,17 @@ class MainMenuScreen(Screen):
         self._width: int = sizes[0]
         self._height: int = sizes[1]
         self._cache: dict[str, AbsoluteRect] = {}
-        self._buttons: list[str] = []
+        # Each button is (layout name, visible label, destination state).
+        self._buttons: list[tuple[str, str, AppState]] = [
+            ('GAME', 'PLAY', AppState.GAME),
+            ('HIGHSCORES', 'HIGHSCORES', AppState.HIGHSCORES),
+            ('INSTRUCTIONS', 'INSTRUCTIONS', AppState.INSTRUCTIONS),
+            ('EXIT', 'EXIT', AppState.EXIT),
+        ]
         self._gen_layout()
         self._cache_abs_layout()
         self._selected = 0
-        self._set_rect_colors(self._buttons[self._selected], True)
+        self._set_rect_colors(self._buttons[self._selected][0], True)
 
     def handle_event(self, event: Event) -> AppState:
         """Handle an input event."""
@@ -40,16 +46,16 @@ class MainMenuScreen(Screen):
             return AppState.EXIT
         if event.type == EventType.KEY_UP:
             if self._selected > 0:
-                self._set_rect_colors(self._buttons[self._selected], False)
+                self._set_rect_colors(self._buttons[self._selected][0], False)
                 self._selected -= 1
-                self._set_rect_colors(self._buttons[self._selected], True)
+                self._set_rect_colors(self._buttons[self._selected][0], True)
         elif event.type == EventType.KEY_DOWN:
-            if self._selected < 3:
-                self._set_rect_colors(self._buttons[self._selected], False)
+            if self._selected < len(self._buttons) - 1:
+                self._set_rect_colors(self._buttons[self._selected][0], False)
                 self._selected += 1
-                self._set_rect_colors(self._buttons[self._selected], True)
+                self._set_rect_colors(self._buttons[self._selected][0], True)
         elif event.type == EventType.KEY_ENTER:
-            return AppState[self._buttons[self._selected]]
+            return self._buttons[self._selected][2]
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -59,7 +65,6 @@ class MainMenuScreen(Screen):
     def render(self) -> AppState:
         """Render the screen."""
 
-        self.graphics.clear()
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
         for abs_rect in self._cache.values():
@@ -105,37 +110,23 @@ class MainMenuScreen(Screen):
 
     def _gen_layout(self) -> None:
         """Build centered menu buttons and the keyboard navigation hint."""
-        self.layout.add_rect(xp=0, yp=20, widthp=25,
-                             heightp=10, name="GAME", text="PLAY",
-                             x_offsetp=5, x_offsetp_rev=5)
-        self.layout.center_rect_x("GAME")
-        self.layout.add_rect(xp=0, yp=35, widthp=25,
-                             heightp=10, name="HIGHSCORES", text="HIGHSCORES",
-                             x_offsetp=5, x_offsetp_rev=5)
-        self.layout.center_rect_x("HIGHSCORES")
-        self.layout.add_rect(xp=0, yp=50, widthp=25,
-                             heightp=10, name="INSTRUCTIONS",
-                             text="INSTRUCTIONS", x_offsetp=5, x_offsetp_rev=5)
-        self.layout.center_rect_x("INSTRUCTIONS")
-        self._menu_scale = NORMAL_TEXT_SCALE
-
-        self.layout.add_rect(xp=0, yp=65, widthp=25,
-                             heightp=10, name="EXIT", text="EXIT",
-                             x_offsetp=5, x_offsetp_rev=5)
-        self.layout.center_rect_x("EXIT")
+        for index, (name, label, _) in enumerate(self._buttons):
+            self.layout.add_rect(xp=0, yp=20 + 15 * index, widthp=25,
+                                 heightp=10, name=name, text=label,
+                                 x_offsetp=5, x_offsetp_rev=5)
+            self.layout.center_rect_x(name)
         self.layout.add_rect(xp=0, yp=95, widthp=100,
                              heightp=2, name="CONTROL_INFO",
                              text="use arrow up and down to move",)
         self.layout.center_rect_x("CONTROL_INFO")
-        self._buttons = ["GAME", "HIGHSCORES", "INSTRUCTIONS", "EXIT"]
 
     def _cache_abs_layout(self) -> None:
         """Cache pixel geometry with shared button scale and default colors."""
-        for button_name in self._buttons:
+        for button_name, _, _ in self._buttons:
             abs_rect = self.layout.get_rect_absolute(button_name,
                                                      self._width,
                                                      self._height,
-                                                     self._menu_scale)
+                                                     NORMAL_TEXT_SCALE)
             if abs_rect is None:
                 continue
             abs_rect.color = DEF_RECT_COLOR

@@ -77,6 +77,7 @@ class GameSession:
                 while seed in self._used_seeds:
                     seed = secrets.randbelow(2**31 - 1) + 1
             self._used_seeds.add(seed)
+            self._random = random.Random(seed)
             maze = Maze.generate(level.width, level.height, seed)
             center = maze.center_spawn
             corners = maze.corner_spawns
@@ -85,12 +86,14 @@ class GameSession:
             self.ghosts = [Ghost(float(x), float(y), spawn=(x, y))
                            for x, y in corners]
             self.power_pellets = set(corners) - {center}
-            choices = sorted(maze.reachable(center)
-                             - self.power_pellets - {center})
+            available = maze.reachable(center) - self.power_pellets - {center}
             amount = self.config.pacgum
-            self.pellets = set(choices if amount == 0 else
-                               random.Random(seed).sample(
-                                   choices, min(amount, len(choices))))
+            if amount == 0:
+                self.pellets = available
+            else:
+                amount = min(amount, len(available))
+                selected = self._random.sample(sorted(available), amount)
+                self.pellets = set(selected)
             self.time_remaining = float(self.config.level_max_time)
             self.power_remaining = 0.0
             self.grace_remaining = 0.0
@@ -164,20 +167,36 @@ class GameSession:
                         return
 
     def _choose_ghost_direction(self, ghost: Ghost) -> None:
-        """Choose chase/flee moves using shortest graph distances."""
+        """Choose a nearby corridor toward or away from the player."""
         maze = self.maze
         if maze is None:
             return
-        source = (id(maze), self.player.cell)
-        if getattr(self, '_distance_source', None) != source:
-            self._distance_source = source
-            self._distance_map = maze.distances(self.player.cell)
         choices = maze.neighbors(ghost.cell)
         if not choices:
             ghost.desired_direction = Directions.STOP
             return
-        choose = max if self.power_remaining > 0 else min
-        target = choose(choices, key=lambda c: self._distance_map.get(c, 0))
+        fleeing = self.power_remaining > 0
+        if not fleeing and len(choices) > 1:
+            dx, dy = ghost.direction.value
+            previous_cell = ghost.cell[0] - dx, ghost.cell[1] - dy
+            choices = [cell for cell in choices if cell != previous_cell]
+
+        best_distance: float | None = None
+        best_choices: list[Cell] = []
+        for x, y in choices:
+            distance = abs(x - self.player.x) + abs(y - self.player.y)
+            if (best_distance is None
+                    or (fleeing and distance > best_distance)
+                    or (not fleeing and distance < best_distance)):
+                best_distance = distance
+                best_choices = [(x, y)]
+            elif distance == best_distance:
+                best_choices.append((x, y))
+
+        if len(best_choices) == 1:
+            target = best_choices[0]
+        else:
+            target = self._random.choice(best_choices)
         dx, dy = target[0] - ghost.cell[0], target[1] - ghost.cell[1]
         ghost.desired_direction = Directions((dx, dy))
 
@@ -185,14 +204,25 @@ class GameSession:
     def _swept_touch(player_start: tuple[float, float], player: Actor,
                      ghost_start: tuple[float, float], ghost: Ghost) -> bool:
         """Detect closest approach of simultaneous motion, including swaps."""
-        rx = player_start[0] - ghost_start[0]
-        ry = player_start[1] - ghost_start[1]
-        vx = (player.x - player_start[0]) - (ghost.x - ghost_start[0])
-        vy = (player.y - player_start[1]) - (ghost.y - ghost_start[1])
-        length = vx * vx + vy * vy
-        t = (max(0.0, min(1.0, -(rx * vx + ry * vy) / length))
-             if length else 0.0)
-        return (rx + t * vx)**2 + (ry + t * vy)**2 <= 0.35**2
+        relative_x = player_start[0] - ghost_start[0]
+        relative_y = player_start[1] - ghost_start[1]
+        relative_move_x = ((player.x - player_start[0])
+                           - (ghost.x - ghost_start[0]))
+        relative_move_y = ((player.y - player_start[1])
+                           - (ghost.y - ghost_start[1]))
+        relative_travel_squared = (relative_move_x * relative_move_x
+                                   + relative_move_y * relative_move_y)
+        if relative_travel_squared == 0:
+            closest_time = 0.0
+        else:
+            closest_time = -(relative_x * relative_move_x
+                             + relative_y * relative_move_y)
+            closest_time /= relative_travel_squared
+            # Clamp to this step: 0 is its start and 1 is its end.
+            closest_time = max(0.0, min(1.0, closest_time))
+        # Actors touch when their closest separation is within 0.35 cells.
+        return ((relative_x + closest_time * relative_move_x)**2
+                + (relative_y + closest_time * relative_move_y)**2 <= 0.35**2)
 
     def _collisions(self, player_start: tuple[float, float],
                     ghost_starts: list[tuple[float, float]]) -> bool:
@@ -204,9 +234,9 @@ class GameSession:
                 continue
             if self.power_remaining > 0:
                 self.score += self.config.points_per_ghost
-                ghost.respawn_remaining = float(
-                    getattr(self.config, 'ghost_respawn_time', 5.0))
-                ghost.x, ghost.y = map(float, ghost.spawn)
+                ghost.respawn_remaining = self.config.ghost_respawn_time
+                ghost.x = float(ghost.spawn[0])
+                ghost.y = float(ghost.spawn[1])
                 ghost.direction = Directions.STOP
                 ghost.desired_direction = Directions.STOP
             elif not self.invincible and self.grace_remaining <= 0:
@@ -223,11 +253,14 @@ class GameSession:
         """Restore center/corner positions and grant brief respawn immunity."""
         if self.maze is None:
             return
-        self.player.x, self.player.y = map(float, self.maze.center_spawn)
+        spawn_x, spawn_y = self.maze.center_spawn
+        self.player.x = float(spawn_x)
+        self.player.y = float(spawn_y)
         self.player.direction = Directions.STOP
         self.player.desired_direction = Directions.STOP
         for ghost in self.ghosts:
-            ghost.x, ghost.y = map(float, ghost.spawn)
+            ghost.x = float(ghost.spawn[0])
+            ghost.y = float(ghost.spawn[1])
             ghost.direction = Directions.STOP
             ghost.desired_direction = Directions.STOP
             ghost.respawn_remaining = 0.0
@@ -244,8 +277,7 @@ class GameSession:
         if cell in self.power_pellets:
             self.power_pellets.remove(cell)
             self.score += self.config.points_per_super_pacgum
-            self.power_remaining = float(
-                getattr(self.config, 'power_duration', 8.0))
+            self.power_remaining = self.config.power_duration
         if not self.pellets and not self.power_pellets:
             self.state = AppState.LEVEL_COMPLETE
 
@@ -259,14 +291,15 @@ class GameSession:
             self.state = AppState.GAME_OVER
             return
         remaining = min(dt, self.time_remaining)
-        player_speed = float(getattr(self.config, 'player_speed', 5.0))
+        player_speed = self.config.player_speed
         player_speed *= self.speed_multiplier
-        ghost_speed = float(getattr(self.config, 'ghost_speed', 4.0))
+        ghost_speed = self.config.ghost_speed
         while remaining > 1e-9 and self.state == AppState.GAME:
             step = min(remaining, 1 / 60,
                        0.1 / max(player_speed, ghost_speed, 1.0))
             if self.power_remaining > 1e-9:
                 step = min(step, self.power_remaining)
+            # Collect first: a power pellet protects against existing contact.
             self._collect()
             if self.state != AppState.GAME:
                 break
@@ -286,6 +319,7 @@ class GameSession:
                     self._move(ghost, ghost_speed * step)
             self._collect()
             died = self._collisions(player_start, ghost_starts)
+            # Contact is resolved before edible/grace/level timers decrease.
             self.power_remaining = max(0.0, self.power_remaining - step)
             self.grace_remaining = max(0.0, self.grace_remaining - step)
             if self.power_remaining < 1e-9:
@@ -314,8 +348,7 @@ class GameSession:
             self.speed_multiplier = (
                 2.0 if self.speed_multiplier == 1.0 else 1.0)
         elif action == 'power':
-            self.power_remaining = float(
-                getattr(self.config, 'power_duration', 8.0))
+            self.power_remaining = self.config.power_duration
         elif action == 'skip':
             self.skip_level()
 

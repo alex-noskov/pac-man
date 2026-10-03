@@ -42,7 +42,6 @@ class HighscoresScreen(Screen):
 
     def render(self) -> AppState:
         """Render the screen."""
-        self.graphics.clear()
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
         for abs_rect in self._cache.values():
@@ -76,7 +75,7 @@ class HighscoresScreen(Screen):
 
     def _gen_layout(self) -> None:
         """Add percentage-based title and return-instruction rectangles."""
-        # HIGHSCORES title: 20% down from the top.
+        # Title rectangle starts 10% down from the top.
         self.layout.add_rect(
             xp=0,
             yp=10,
@@ -87,9 +86,7 @@ class HighscoresScreen(Screen):
         )
         self.layout.center_rect_x("TITLE")
 
-        # Instructions: 5% up from the bottom.
-        # heightp=5 means the rectangle occupies the bottom 5%.
-        # Therefore yp=90 places it in the 90%-95% range.
+        # Return hint near the bottom of the window.
         self.layout.add_rect(
             xp=0,
             yp=95,

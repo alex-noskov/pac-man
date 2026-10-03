@@ -6,25 +6,33 @@ from src.events import EventFactory, EventType
 
 class EventTests(unittest.TestCase):
     def test_control_factories(self) -> None:
-        for name in ("left", "right", "up", "down", "enter", "esc",
-                     "pause", "cheat", "invincible", "skip", "freeze",
-                     "life", "speed", "power", "backspace"):
-            with self.subTest(name=name):
-                factory = getattr(EventFactory, "key_" + name, None)
-                self.assertIsNotNone(factory)
-                if factory is not None:
-                    event = factory()
-                    self.assertEqual(event.type,
-                                     getattr(EventType, "KEY_" + name.upper()))
-                    self.assertEqual(event.data, {})
+        cases = [
+            (EventFactory.key_left, EventType.KEY_LEFT),
+            (EventFactory.key_right, EventType.KEY_RIGHT),
+            (EventFactory.key_up, EventType.KEY_UP),
+            (EventFactory.key_down, EventType.KEY_DOWN),
+            (EventFactory.key_enter, EventType.KEY_ENTER),
+            (EventFactory.key_esc, EventType.KEY_ESC),
+            (EventFactory.key_pause, EventType.KEY_PAUSE),
+            (EventFactory.key_cheat, EventType.KEY_CHEAT),
+            (EventFactory.key_invincible, EventType.KEY_INVINCIBLE),
+            (EventFactory.key_skip, EventType.KEY_SKIP),
+            (EventFactory.key_freeze, EventType.KEY_FREEZE),
+            (EventFactory.key_life, EventType.KEY_LIFE),
+            (EventFactory.key_speed, EventType.KEY_SPEED),
+            (EventFactory.key_power, EventType.KEY_POWER),
+            (EventFactory.key_backspace, EventType.KEY_BACKSPACE),
+        ]
+        for factory, expected_type in cases:
+            with self.subTest(type=expected_type):
+                event = factory()
+                self.assertEqual(event.type, expected_type)
+                self.assertEqual(event.data, {})
 
     def test_text_factory(self) -> None:
-        factory = getattr(EventFactory, "text", None)
-        self.assertIsNotNone(factory)
-        if factory is not None:
-            event = factory("Alex 42")
-            self.assertEqual(event.type, EventType.TEXT)
-            self.assertEqual(event.data, {"text": "Alex 42"})
+        event = EventFactory.text("Alex 42")
+        self.assertEqual(event.type, EventType.TEXT)
+        self.assertEqual(event.data, {"text": "Alex 42"})
 
     def test_mouse_and_close_factories_preserve_api(self) -> None:
         self.assertEqual(EventFactory.mouse_move(1, 2).data, {"x": 1, "y": 2})

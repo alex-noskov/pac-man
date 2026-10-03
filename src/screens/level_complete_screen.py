@@ -45,7 +45,6 @@ class LevelCompleteScreen(Screen):
     def render(self) -> AppState:
         """Render the level complete screen."""
 
-        self.graphics.clear()
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
 

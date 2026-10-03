@@ -78,7 +78,9 @@ Automated gameplay tests cover both distributions.
   supplied font/colors; extract simulation from the overcoupled gameplay view.
 - Use a headless object model so correctness tests do not need a graphical display.
 - Adapt the assigned generator as-is, never replace it with a private generator.
-- Use BFS graph distances for chase/flee, not Manhattan paths through walls.
+- Ghost chase/flee was simplified in the final readability pass to local
+  horizontal-plus-vertical distance comparisons of legal neighboring cells.
+  Maze graph traversal is retained for reachability, not for ghost AI.
 - Use short time steps and swept collision checks to prevent frame-rate tunneling.
 - Treat regular and power pellets as separate sets; consume each once and require
   both sets empty for completion.
