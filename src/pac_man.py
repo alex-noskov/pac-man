@@ -38,7 +38,6 @@ class App:
 
     def app_loop(self, event_buffer: deque) -> None:
         start = time.perf_counter()
-        event_start = time.perf_counter()
         while event_buffer:
             event = event_buffer.popleft()
             next_state = self.screen.handle_event(event)
@@ -47,29 +46,14 @@ class App:
             if self.state == AppState.EXIT:
                 self.graphics.stop_loop()
                 return
-        event_time = time.perf_counter() - event_start
-
-        update_start = time.perf_counter()
         next_state = self.screen.update()
         if next_state != self.state:
             self._transition_to(next_state)
-        update_time = time.perf_counter() - update_start
-
         before_sleep = time.perf_counter() - start
         time.sleep(max(0, FRAME_TIME - before_sleep))
-
-        render_start = time.perf_counter()
-        self.screen.render()
-        render_time = time.perf_counter() - render_start
-
-        total = time.perf_counter() - start
-
-        # print(
-        #    f"events={event_time*1000:.1f}ms "
-        #    f"update={update_time*1000:.1f}ms "
-        #    f"render={render_time*1000:.1f}ms "
-        #    f"total={total*1000:.1f}ms"
-        # )
+        next_state = self.screen.render()
+        if next_state != self.state:
+            self._transition_to(next_state)
 
     def _transition_to(self, state: AppState) -> None:
         print(f"NEW STATE: {self.state} -> {state}")
@@ -77,8 +61,11 @@ class App:
         self.screen = self.screens[self.state]
 
     def start(self) -> None:
-        self.graphics.start()
-        self.graphics.quit()
+        """Run the native loop and release resources on every exit path."""
+        try:
+            self.graphics.start()
+        finally:
+            self.graphics.quit()
 
 
 def main() -> None:

@@ -274,9 +274,8 @@ class AppLoopTests(unittest.TestCase):
             [call.start(), call.quit()],
         )
 
-    @unittest.expectedFailure
     def test_render_requested_transition_is_applied(self) -> None:
-        """Document that App discards Screen.render()'s return value."""
+        """Apply transitions consistently, including render results."""
         timeline: list[tuple] = []
         menu = RecordingScreen(
             "menu",
@@ -299,6 +298,18 @@ class AppLoopTests(unittest.TestCase):
             app.app_loop(deque())
 
         self.assertEqual(app.state, AppState.GAME)
+
+
+class ResourceFailureTests(unittest.TestCase):
+    def test_start_releases_graphics_when_loop_fails(self) -> None:
+        """Native resources must be released even on a loop failure."""
+        app = App.__new__(App)
+        graphics = MagicMock()
+        graphics.start.side_effect = RuntimeError("loop failed")
+        app.graphics = cast(Any, graphics)
+        with self.assertRaises(RuntimeError):
+            app.start()
+        graphics.quit.assert_called_once_with()
 
 
 if __name__ == "__main__":
