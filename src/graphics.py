@@ -1,54 +1,73 @@
 from .mlx_wrapper import MlxWrapper
 from .font_map import FONT_MAP
+from collections import deque
 from typing import Callable
+from .events import Event
 
 
 class Graphics:
-    def __init__(self, width: int, height: int, app_loop: Callable) -> None:
+    """Expose layered MLX drawing with bitmap text and shape helpers."""
+
+    def __init__(self, width: int, height: int,
+                 app_loop: Callable[[deque[Event]], None]) -> None:
+        """Create an MLX window and bind its frame callback to app_loop."""
         self.mlx_wrapper = MlxWrapper(width=width, height=height,
                                       loop_callback=app_loop)
-        self.width = width
-        self.height = height
+        self.width = self.mlx_wrapper.width
+        self.height = self.mlx_wrapper.height
 
     def start(self) -> None:
+        """Run the native input and rendering loop."""
         self.mlx_wrapper.start()
 
     def stop_loop(self) -> None:
+        """Request that the native event loop stop."""
         self.mlx_wrapper.stop_loop()
 
     def quit(self) -> None:
+        """Release native graphics resources through the MLX wrapper."""
         self.mlx_wrapper.quit()
 
     def get_window_size(self) -> tuple[int, int]:
+        """Return the actual window width and height in pixels."""
         return (self.width, self.height)
 
     def create_layer(self, name: str) -> None:
+        """Create an independent drawing layer with the given name."""
         self.mlx_wrapper.create_layer(name)
 
     def remove_layer(self, name: str) -> None:
+        """Remove the named drawing layer if it exists."""
         self.mlx_wrapper.remove_layer(name)
 
     def has_layer(self, name: str) -> bool:
+        """Return whether the named drawing layer exists."""
         return self.mlx_wrapper.has_layer(name)
 
     def set_layer_order(self, order: list[str]) -> None:
+        """Set the named layers' bottom-to-top compositing order."""
         self.mlx_wrapper.set_layer_order(order)
 
     def clear(self, layer: str = "main") -> None:
+        """Reset the named layer to transparent pixels."""
         self.mlx_wrapper.clear_layer(layer)
 
     def fill(self, color: int, layer: str = "main") -> None:
+        """Fill the named layer with the given ARGB color."""
         self.mlx_wrapper.fill_layer(layer, color)
 
     def refresh(self) -> None:
+        """Composite the ordered layers onto the window."""
         self.mlx_wrapper.refresh()
 
     def draw_rectangle(self, x: int, y: int, width: int, height: int,
                        color: int, layer: str = "main") -> None:
+        """Draw a filled pixel rectangle in the named layer."""
         self.mlx_wrapper.put_rectangle(x, y, width, height, color, layer=layer)
 
     def draw_circle(self, center_x: int, center_y: int, radius: int,
                     color: int, layer: str = "main") -> None:
+        """Draw a filled circle at the pixel center in the named layer."""
         radius_squared = radius * radius
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
@@ -59,6 +78,7 @@ class Graphics:
     def draw_text(self, text: str, x: int, y: int, color: int,
                   spacing: int = 1, scale: int = 1,
                   layer: str = "main") -> None:
+        """Draw bitmap glyphs with pixel spacing and integer scale."""
         char_width = 5 * scale
         # char_height = 8 * scale
         for char_index, char in enumerate(text):
@@ -82,6 +102,7 @@ class Graphics:
     def draw_image(self, x: int, y: int, bits: list[str], line_len: int,
                    color: int, scale: int = 1,
                    layer: str = "main") -> None:
+        """Draw scaled set bits, wrapping rows at the supplied line length."""
         ix = iy = 0
         for bit in bits:
             if bit == "1":
@@ -99,6 +120,7 @@ class Graphics:
                 iy += 1
 
     def visualise_dot(self, x: int, y: int, layer: str = "main") -> None:
+        """Mark a pixel position with a purple diagonal cross."""
         self.mlx_wrapper.put_pixel(x, y, 0xFF800080, layer)
         self.mlx_wrapper.put_pixel(x+1, y+1, 0xFF800080, layer)
         self.mlx_wrapper.put_pixel(x+2, y+2, 0xFF800080, layer)
