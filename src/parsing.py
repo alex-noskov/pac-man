@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 from pydantic import ValidationError
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
 DEFAULT_LEVELS = [
@@ -20,13 +20,25 @@ DEFAULT_LEVELS = [
 
 
 class Level(BaseModel):
+    """A bounded maze specification understood by the external generator."""
+
     model_config = ConfigDict(extra="ignore")
-    level_number: int
-    width: int
-    height: int
+    level_number: int = Field(default=1, ge=0)
+    width: int = Field(ge=7, le=40)
+    height: int = Field(ge=7, le=40)
+
+    @field_validator('level_number', 'width', 'height', mode='before')
+    @classmethod
+    def reject_booleans(cls, value: Any) -> Any:
+        """Do not silently turn boolean JSON values into integers."""
+        if isinstance(value, bool):
+            raise ValueError('Expected an integer, not a boolean')
+        return value
 
 
 class Config(BaseModel):
+    """Validated game settings with defaults safe for maze generation."""
+
     model_config = ConfigDict(extra="ignore", validate_default=True)
 
     highscore_filename: str = "highscores.json"
@@ -36,14 +48,80 @@ class Config(BaseModel):
         ]
     )
     lives: int = Field(default=3, ge=1, le=10)
-    pacgum: int = Field(default=42, ge=0)
+    pacgum: int = Field(default=0, ge=0)
     points_per_pacgum: int = Field(default=10, ge=1, le=1000)
     points_per_super_pacgum: int = Field(default=50, ge=10, le=3000)
     points_per_ghost: int = Field(default=200, ge=15, le=5000)
-    window_width: int = 2000
-    window_height: int = 1000
+    window_width: int = Field(default=2000, ge=320, le=3840)
+    window_height: int = Field(default=1000, ge=240, le=2160)
     seed: str = "42"
-    level_max_time: int = Field(default=90, ge=90, le=500)
+    level_max_time: int = Field(default=90, ge=1, le=500)
+    power_duration: float = Field(default=8, ge=0.1, le=120,
+                                  allow_inf_nan=False)
+    ghost_respawn_time: float = Field(default=5, ge=0.1, le=120,
+                                      allow_inf_nan=False)
+    player_speed: float = Field(default=5, ge=0.1, le=30,
+                                allow_inf_nan=False)
+    ghost_speed: float = Field(default=4, ge=0.1, le=30,
+                               allow_inf_nan=False)
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def reject_booleans(cls, value: Any) -> Any:
+        """Prevent boolean values from masquerading as game parameters."""
+        if isinstance(value, bool):
+            raise ValueError('Expected a config value, not a boolean')
+        return value
+
+    @field_validator('seed', mode='before')
+    @classmethod
+    def stringify_seed(cls, value: Any) -> Any:
+        """Keep the string seed API while accepting JSON integer seeds."""
+        return str(value) if type(value) is int else value
+
+    @field_validator('seed')
+    @classmethod
+    def validate_seed(cls, value: str) -> str:
+        """Require a positive integer so the first maze is reproducible."""
+        seed = int(value)
+        if not 1 <= seed <= 2**31 - 1:
+            raise ValueError('Seed must be an integer in 1..2147483647')
+        return str(seed)
+
+    @field_validator('pacgum')
+    @classmethod
+    def clamp_pacgum(cls, value: int) -> int:
+        """Zero means all corridors; cap positive counts at maze capacity."""
+        if value > 1600:
+            print('Config pacgum exceeds maze capacity. Clamping to 1600.')
+            return 1600
+        return value
+
+    @field_validator('highscore_filename')
+    @classmethod
+    def validate_filename(cls, value: str) -> str:
+        """Reject empty names and characters unusable by file APIs."""
+        if not value.strip() or '\x00' in value:
+            raise ValueError('Expected a nonempty filesystem path')
+        value.encode('utf-8')
+        return value
+
+    @field_validator('levels')
+    @classmethod
+    def pad_levels(cls, levels: list[Level]) -> list[Level]:
+        """Preserve custom levels and append defaults to reach ten levels."""
+        if len(levels) < 10:
+            print('Config levels has fewer than ten entries. '
+                  'Appending default levels.')
+            levels = list(levels)
+            next_number = max((level.level_number for level in levels),
+                              default=0) + 1
+            while len(levels) < 10:
+                data = dict(DEFAULT_LEVELS[len(levels)])
+                data['level_number'] = next_number
+                levels.append(Level.model_validate(data))
+                next_number += 1
+        return levels
 
 
 def parse(path: Path | str) -> Config:
@@ -76,7 +154,7 @@ def parse(path: Path | str) -> Config:
         print("Using default config.")
         return Config()
 
-    except OSError as error:
+    except (OSError, UnicodeError, ValueError, RecursionError) as error:
         print(f"Could not read config file: {error}")
         print("Using default config.")
         return Config()
@@ -107,6 +185,13 @@ def validate_with_field_defaults(
     raw_config: dict[str, Any],
 ) -> Config:
     """Validate config and replace invalid fields with defaults."""
+    defaults = Config()
+    for field_name in Config.model_fields:
+        if field_name not in raw_config:
+            print(
+                f"Missing config value for '{field_name}'. "
+                f"Using default {getattr(defaults, field_name)!r}"
+            )
     try:
         return Config.model_validate(raw_config)
 
