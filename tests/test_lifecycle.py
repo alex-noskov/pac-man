@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 from src.events import EventFactory
 from src.models import AppState
-from src.pac_man import App
-from src.parsing import Config, parse
+from src.app import App
+from src.parsing import Config, parse_conf
 
 
 class LifecycleTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class LifecycleTests(unittest.TestCase):
                         highscore_filename=path)
         graphics = MagicMock()
         graphics.get_window_size.return_value = (800, 600)
-        with patch('src.pac_man.Graphics', return_value=graphics):
+        with patch('src.app.Graphics', return_value=graphics):
             return App(config)
 
     def test_menu_start_resets_clock_and_old_run(self) -> None:
@@ -83,7 +83,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_supplied_config_preserves_zero_based_level_labels(self) -> None:
         """The checked-in configuration must not discard valid custom mazes."""
-        config = parse(Path('config.json'))
+        config = parse_conf(Path('config.json'))
         self.assertEqual(len(config.levels), 10)
         self.assertEqual(config.levels[0].width, 14)
         self.assertEqual(config.levels[1].width, 19)

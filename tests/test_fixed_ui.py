@@ -7,7 +7,7 @@ from src import ui
 from src.colors import BLACK
 from src.highscores import HighscoreStore
 from src.models import AppState
-from src.parsing import Config, parse
+from src.parsing import Config, parse_conf
 from src.screens import (EndScreen, GameScreen, HighscoresScreen,
                          InstructionsScreen, LevelCompleteScreen,
                          MainMenuScreen)
@@ -28,7 +28,7 @@ class FixedUiTests(unittest.TestCase):
 
     def test_default_and_supplied_window_fit_a_laptop(self) -> None:
         """The shipped and fallback windows use the same modest dimensions."""
-        for config in (Config(), parse('config.json')):
+        for config in (Config(), parse_conf('config.json')):
             self.assertEqual((config.window_width, config.window_height),
                              (1024, 640))
 

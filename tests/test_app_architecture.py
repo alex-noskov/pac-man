@@ -1,13 +1,11 @@
 from collections import deque
-from contextlib import redirect_stdout
-from io import StringIO
 import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock, call, patch
 
 from src.events import EventFactory
 from src.models import AppState
-from src.pac_man import App, main
+from src.app import App
 from src.parsing import Config
 
 
@@ -44,42 +42,6 @@ class RecordingScreen:
         return self.render_state
 
 
-class MainEntryPointTests(unittest.TestCase):
-    def test_main_without_exactly_one_argument_prints_usage(self) -> None:
-        output = StringIO()
-
-        with (
-            patch("src.pac_man.sys.argv", ["pac-man"]),
-            patch("src.pac_man.parse") as parse_mock,
-            patch("src.pac_man.App") as app_class,
-            redirect_stdout(output),
-        ):
-            main()
-
-        self.assertIn(
-            "Usage: python3 pac-man.py <config.json>",
-            output.getvalue(),
-        )
-        parse_mock.assert_not_called()
-        app_class.assert_not_called()
-
-    def test_main_parses_config_builds_app_and_starts_it(self) -> None:
-        config = object()
-        app = MagicMock()
-
-        with (
-            patch("src.pac_man.sys.argv", ["pac-man", "settings.json"]),
-            patch("src.pac_man.parse", return_value=config) as parse_mock,
-            patch("src.pac_man.App", return_value=app) as app_class,
-            patch("builtins.print"),
-        ):
-            main()
-
-        parse_mock.assert_called_once_with("settings.json")
-        app_class.assert_called_once_with(config, AppState.MAIN_MENU)
-        app.start.assert_called_once_with()
-
-
 class AppConstructionTests(unittest.TestCase):
     def test_constructor_shares_graphics_between_screens(self) -> None:
         config = Config(window_width=800, window_height=600)
@@ -93,31 +55,31 @@ class AppConstructionTests(unittest.TestCase):
 
         with (
             patch(
-                "src.pac_man.Graphics",
+                "src.app.Graphics",
                 return_value=graphics,
             ) as graphics_class,
             patch(
-                "src.pac_man.GameScreen",
+                "src.app.GameScreen",
                 return_value=game_screen,
             ) as game_class,
             patch(
-                "src.pac_man.MainMenuScreen",
+                "src.app.MainMenuScreen",
                 return_value=main_menu,
             ) as menu_class,
             patch(
-                "src.pac_man.InstructionsScreen",
+                "src.app.InstructionsScreen",
                 return_value=instructions,
             ) as instructions_class,
             patch(
-                "src.pac_man.HighscoresScreen",
+                "src.app.HighscoresScreen",
                 return_value=highscores,
             ) as highscores_class,
             patch(
-                "src.pac_man.LevelCompleteScreen",
+                "src.app.LevelCompleteScreen",
                 return_value=level_complete,
             ) as level_complete_class,
             patch(
-                "src.pac_man.ExitScreen",
+                "src.app.ExitScreen",
                 return_value=exit_screen,
             ) as exit_class,
         ):
@@ -189,7 +151,7 @@ class AppLoopTests(unittest.TestCase):
             {AppState.MAIN_MENU: menu, AppState.GAME: game},
         )
 
-        with patch("src.pac_man.time.sleep"), patch("builtins.print"):
+        with patch("src.app.time.sleep"), patch("builtins.print"):
             app.app_loop(deque([first_event, second_event]))
 
         self.assertEqual(
@@ -225,7 +187,7 @@ class AppLoopTests(unittest.TestCase):
             },
         )
 
-        with patch("src.pac_man.time.sleep"), patch("builtins.print"):
+        with patch("src.app.time.sleep"), patch("builtins.print"):
             app.app_loop(deque())
 
         self.assertEqual(
@@ -258,7 +220,7 @@ class AppLoopTests(unittest.TestCase):
             {AppState.MAIN_MENU: menu, AppState.EXIT: exit_screen},
         )
 
-        with patch("src.pac_man.time.sleep"), patch("builtins.print"):
+        with patch("src.app.time.sleep"), patch("builtins.print"):
             app.app_loop(deque([close_event]))
 
         self.assertEqual(timeline, [])
@@ -299,7 +261,7 @@ class AppLoopTests(unittest.TestCase):
             {AppState.MAIN_MENU: menu, AppState.GAME: game},
         )
 
-        with patch("src.pac_man.time.sleep"), patch("builtins.print"):
+        with patch("src.app.time.sleep"), patch("builtins.print"):
             app.app_loop(deque())
 
         self.assertEqual(app.state, AppState.GAME)
@@ -310,8 +272,8 @@ class ResourceFailureTests(unittest.TestCase):
         """An error before App.start must release its native resources."""
         graphics = MagicMock()
         graphics.get_window_size.return_value = (800, 600)
-        with (patch('src.pac_man.Graphics', return_value=graphics),
-              patch('src.pac_man.InstructionsScreen',
+        with (patch('src.app.Graphics', return_value=graphics),
+              patch('src.app.InstructionsScreen',
                     side_effect=RuntimeError('screen init failed'))):
             with self.assertRaises(RuntimeError):
                 App(Config())

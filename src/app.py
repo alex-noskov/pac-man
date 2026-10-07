@@ -1,6 +1,6 @@
 import sys
 import time
-from src.parsing import parse, Config
+from .parsing import Config
 from .models import AppState
 from .screens import (GameScreen, MainMenuScreen, InstructionsScreen,
                       HighscoresScreen, ExitScreen, Screen,
@@ -109,15 +109,3 @@ class App:
             self.graphics.start()
         finally:
             self.graphics.quit()
-
-
-def main() -> None:
-    """Start the Pac-Man game."""
-
-    if len(sys.argv) != 2:
-        print("Usage: python3 pac-man.py <config.json>")
-        return
-    config = parse(sys.argv[1])
-
-    app = App(config, AppState.MAIN_MENU)
-    app.start()

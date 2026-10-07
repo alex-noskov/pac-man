@@ -6,16 +6,16 @@ from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
 DEFAULT_LEVELS = [
-    {"level_number": 1, "width": "15", "height": "15"},
-    {"level_number": 2, "width": "20", "height": "18"},
-    {"level_number": 3, "width": "20", "height": "20"},
-    {"level_number": 4, "width": "25", "height": "20"},
-    {"level_number": 5, "width": "25", "height": "25"},
-    {"level_number": 6, "width": "30", "height": "25"},
-    {"level_number": 7, "width": "30", "height": "28"},
-    {"level_number": 8, "width": "32", "height": "30"},
-    {"level_number": 9, "width": "35", "height": "30"},
-    {"level_number": 10, "width": "35", "height": "35"}
+    {"level_number": 1, "width": 15, "height": 15},
+    {"level_number": 2, "width": 20, "height": 18},
+    {"level_number": 3, "width": 20, "height": 20},
+    {"level_number": 4, "width": 25, "height": 20},
+    {"level_number": 5, "width": 25, "height": 25},
+    {"level_number": 6, "width": 30, "height": 25},
+    {"level_number": 7, "width": 30, "height": 28},
+    {"level_number": 8, "width": 32, "height": 30},
+    {"level_number": 9, "width": 35, "height": 30},
+    {"level_number": 10, "width": 35, "height": 35}
 ]
 
 
@@ -124,7 +124,7 @@ class Config(BaseModel):
         return levels
 
 
-def parse(path: Path | str) -> Config:
+def parse_conf(path: Path | str) -> Config:
     """Parse and validate a JSON configuration file."""
     config_path = Path(path)
 
