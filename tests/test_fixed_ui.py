@@ -4,7 +4,7 @@ from typing import Any, cast
 from unittest.mock import MagicMock
 
 from src import ui
-from src.colors import BLACK
+from src.ui import BLACK
 from src.highscores import HighscoreStore
 from src.models import AppState
 from src.parsing import Config, parse_conf

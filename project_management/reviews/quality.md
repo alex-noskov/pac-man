@@ -47,7 +47,7 @@ Risk: **SAFE** = localized, readily behavior-preserving; **CAREFUL** = order/con
 
 ### Q6 — Layout inset names and positional forwarding conceal units and sides
 
-- **Location:** `src/ui.py:109-125`, `136-148`, `360-369`; callers in `src/screens/main_menue_screen.py:108-124`.
+- **Location:** `src/ui.py:109-125`, `136-148`, `360-369`; callers in `src/screens/main_menu_screen.py:108-124`.
 - **Problem / beginner cost:** `x_offsetp_rev` and `y_offsetp_rev` require the reader to reverse-engineer that they mean right and bottom text insets, measured as percentages of the rectangle rather than window. `add_rect()` forwards a long group of similarly typed positional arguments to `Rect`, so a swapped side is hard to notice. The brief docstrings do not state the mapping.
 - **Plain Python fix:** Preserve the existing public keywords; document left/top/right/bottom and rectangle-relative units in the two entry-point docstrings. Forward to `Rect` using explicit keywords. Use descriptive local names (`right_inset`, `bottom_inset`) for converted pixel values. Do not rename every layout API or replace the percentage system with a new framework.
 - **Confidence:** high (original inset introduction `ab37b826`; active main-menu usages verified). **Risk:** SAFE. **Behavior change:** none, including the existing rounding and fixed font sizes.
@@ -61,7 +61,7 @@ Risk: **SAFE** = localized, readily behavior-preserving; **CAREFUL** = order/con
 
 ### Q8 — Menu routing relies on a hidden equality between widget names and enum names
 
-- **Location:** `src/screens/main_menue_screen.py:47-52`, `108-130`.
+- **Location:** `src/screens/main_menu_screen.py:47-52`, `108-130`.
 - **Problem / beginner cost:** Activation uses `AppState[self._buttons[self._selected]]`. Layout identifiers therefore double as enum member names, while the bounds check separately hardcodes `3`. Changing/adding a beginner-level menu item requires knowing three unstated connections (layout name, state name, last index), and an innocent layout rename can produce a runtime lookup error.
 - **Plain Python fix:** Keep an explicit small list of button-name/`AppState` pairs and obtain the target state from the pair rather than enum lookup by string. Derive the last valid index from the list length. Retain the same order, labels, colors and non-wrapping navigation. Do not add a generic action/command system.
 - **Confidence:** high. **Risk:** CAREFUL: menu layout caching and selection/color updates must use the same list. **Behavior change:** none for the four existing items; future identifiers no longer have to equal enum names.

@@ -1,9 +1,8 @@
 from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
-from ..colors import WHITE, BLACK, YELLOW
 from ..events import Event, EventType
-from ..ui import Layout, AbsoluteRect, NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE
+from ..ui import WHITE, BLACK, YELLOW, Layout, AbsoluteRect, NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE
 from ..highscores import HighscoreStore
 
 

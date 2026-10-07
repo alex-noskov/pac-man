@@ -1,11 +1,10 @@
 """Victory/loss score presentation and keyboard player-name entry."""
 from .screen import Screen
-from ..colors import BLACK, WHITE, YELLOW
 from ..events import Event, EventType
 from ..graphics import Graphics
 from ..highscores import HighscoreStore
 from ..models import AppState
-from ..ui import NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE
+from ..ui import BLACK, WHITE, YELLOW, NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE
 
 NAME_BOX_WIDTH = 600
 NAME_BOX_HEIGHT = 48

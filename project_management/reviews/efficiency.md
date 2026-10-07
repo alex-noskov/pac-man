@@ -56,7 +56,7 @@ No production, test, dependency or vendor files were changed by this review. Onl
 
 ### 4. Four menus clear a surface immediately before completely covering it
 
-**Files:** `src/screens/main_menue_screen.py:62-63`, `highscores_screen.py:45-46`, `instructions_screen.py:61-62`, `level_complete_screen.py:48-49`; implementation `src/mlx_wrapper/mlx_wrapper.py:61-75`.
+**Files:** `src/screens/main_menu_screen.py:62-63`, `highscores_screen.py:45-46`, `instructions_screen.py:61-62`, `level_complete_screen.py:48-49`; implementation `src/mlx_wrapper/mlx_wrapper.py:61-75`.
 
 **Evidence/history:** Each sequence targets the default `main` layer and calls `clear()` followed immediately by `fill(BLACK)`. `BLACK` is opaque (`0xFF000000`); fill writes every visible pixel. Blame shows the main-menu clear predates the later addition of black fill. Existing end/error screens already use opaque fill without a preceding clear.
 

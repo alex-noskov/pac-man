@@ -22,7 +22,7 @@ Priority is reducing competing mental models and duplicated decisions, not minim
 
 ### 2. Define main-menu button data once, in a short local loop
 
-**Location:** `src/screens/main_menue_screen.py` `_gen_layout` 108–130; navigation 41–50.
+**Location:** `src/screens/main_menu_screen.py` `_gen_layout` 108–130; navigation 41–50.
 
 **Complexity:** Four nearly identical `add_rect`/`center_rect_x` blocks repeat identical geometry, while `_buttons` repeats the same names elsewhere. The navigation upper bound independently assumes four buttons.
 

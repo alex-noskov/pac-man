@@ -1,8 +1,7 @@
 from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
-from ..colors import YELLOW, BLACK, BLUE, PURPLE, ORANGE, WHITE
-from ..ui import Layout, AbsoluteRect, NORMAL_TEXT_SCALE
+from ..ui import YELLOW, BLACK, BLUE, PURPLE, ORANGE, WHITE, Layout, AbsoluteRect, NORMAL_TEXT_SCALE
 from ..events import Event, EventType
 from ..highscores import HighscoreStore
 

@@ -1,9 +1,8 @@
 from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
-from ..colors import BLACK, YELLOW
 from ..events import Event, EventType
-from ..ui import Layout, AbsoluteRect, TITLE_TEXT_SCALE
+from ..ui import BLACK, YELLOW, Layout, AbsoluteRect, TITLE_TEXT_SCALE
 
 
 class LevelCompleteScreen(Screen):
