@@ -9,26 +9,45 @@ from src.screens import MainMenuScreen
 
 
 class MenuNavigationTests(unittest.TestCase):
-    """Keep the original order and non-wrapping keyboard behavior."""
+    """Keep button order and wrap keyboard navigation."""
 
-    def test_buttons_keep_their_order_and_clamp_at_both_ends(self) -> None:
-        """Repeated Up/Down cannot go past Play/Exit or change destinations."""
+    def test_buttons_keep_their_order_and_wrap_at_both_ends(self) -> None:
+        """Up from Play wraps to Exit and Down from Exit wraps to Play."""
         graphics = MagicMock()
         graphics.get_window_size.return_value = (1024, 640)
         menu = MainMenuScreen(cast(Any, graphics))
-        for _ in range(3):
-            menu.handle_event(EventFactory.key_up())
-        self.assertEqual(menu.handle_event(EventFactory.key_enter()),
-                         AppState.GAME)
-        for state in (AppState.HIGHSCORES, AppState.INSTRUCTIONS,
-                      AppState.EXIT):
+
+        menu.handle_event(EventFactory.key_up())
+        self.assertEqual(
+            menu.handle_event(EventFactory.key_enter()),
+            AppState.EXIT,
+        )
+
+        menu.handle_event(EventFactory.key_down())
+        self.assertEqual(
+            menu.handle_event(EventFactory.key_enter()),
+            AppState.GAME,
+        )
+
+        for state in (
+            AppState.HIGHSCORES,
+            AppState.INSTRUCTIONS,
+            AppState.EXIT,
+            AppState.GAME,
+        ):
             menu.handle_event(EventFactory.key_down())
-            result = menu.handle_event(EventFactory.key_enter())
-            self.assertEqual(result, state)
-        for _ in range(3):
-            menu.handle_event(EventFactory.key_down())
-        self.assertEqual(menu.handle_event(EventFactory.key_enter()),
-                         AppState.EXIT)
-        self.assertEqual(menu.layout.get_rect_names(),
-                         ['GAME', 'HIGHSCORES', 'INSTRUCTIONS', 'EXIT',
-                          'CONTROL_INFO'])
+            self.assertEqual(
+                menu.handle_event(EventFactory.key_enter()),
+                state,
+            )
+
+        self.assertEqual(
+            menu.layout.get_rect_names(),
+            [
+                'GAME',
+                'HIGHSCORES',
+                'INSTRUCTIONS',
+                'EXIT',
+                'CONTROL_INFO',
+            ],
+        )

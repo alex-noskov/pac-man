@@ -1,4 +1,3 @@
-import sys
 import time
 from .parsing import Config
 from .models import AppState

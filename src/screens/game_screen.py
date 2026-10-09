@@ -8,7 +8,16 @@ from ..events import Event, EventType
 from ..graphics import Graphics
 from ..models import AppState, Directions
 from ..parsing import Config
-from ..ui import BLACK, BLUE, PINK, WHITE, YELLOW, NORMAL_TEXT_SCALE, TITLE_TEXT_SCALE, HUD_TEXT_SCALE
+from ..ui import (
+        BLACK,
+        BLUE,
+        PINK,
+        WHITE,
+        YELLOW,
+        NORMAL_TEXT_SCALE,
+        TITLE_TEXT_SCALE,
+        HUD_TEXT_SCALE
+)
 
 HUD_HEIGHT = 80
 MAZE_MARGIN = 20

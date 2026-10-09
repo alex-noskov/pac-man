@@ -1,7 +1,17 @@
 from .screen import Screen
 from ..models import AppState
 from ..graphics import Graphics
-from ..ui import YELLOW, BLACK, BLUE, PURPLE, ORANGE, WHITE, Layout, AbsoluteRect, NORMAL_TEXT_SCALE
+from ..ui import (
+        YELLOW,
+        BLACK,
+        BLUE,
+        PURPLE,
+        ORANGE,
+        WHITE,
+        Layout,
+        AbsoluteRect,
+        NORMAL_TEXT_SCALE,
+    )
 from ..events import Event, EventType
 from ..highscores import HighscoreStore
 
@@ -48,10 +58,18 @@ class MainMenuScreen(Screen):
                 self._set_rect_colors(self._buttons[self._selected][0], False)
                 self._selected -= 1
                 self._set_rect_colors(self._buttons[self._selected][0], True)
+            else:
+                self._set_rect_colors(self._buttons[self._selected][0], False)
+                self._selected = len(self._buttons) - 1
+                self._set_rect_colors(self._buttons[self._selected][0], True)
         elif event.type == EventType.KEY_DOWN:
             if self._selected < len(self._buttons) - 1:
                 self._set_rect_colors(self._buttons[self._selected][0], False)
                 self._selected += 1
+                self._set_rect_colors(self._buttons[self._selected][0], True)
+            else:
+                self._set_rect_colors(self._buttons[self._selected][0], False)
+                self._selected = 0
                 self._set_rect_colors(self._buttons[self._selected][0], True)
         elif event.type == EventType.KEY_ENTER:
             return self._buttons[self._selected][2]

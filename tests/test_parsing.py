@@ -95,7 +95,10 @@ class ParsingTests(unittest.TestCase):
             path.write_bytes(b'\xff')
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(parse_conf(path), Config())
-                self.assertEqual(parse_conf(path.parent / 'missing.json'), Config())
+                self.assertEqual(
+                    parse_conf(path.parent / 'missing.json'),
+                    Config()
+                )
                 self.assertEqual(parse_conf(path.parent), Config())
                 self.assertEqual(parse_conf(path.parent / 'bad.txt'), Config())
 
