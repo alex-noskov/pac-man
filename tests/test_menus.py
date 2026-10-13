@@ -4,7 +4,8 @@ from typing import Any, cast
 from unittest.mock import MagicMock
 
 from src.highscores import HighscoreStore
-from src.screens import HighscoresScreen, MainMenuScreen
+from src.ui.screen_highscores import HighscoresScreen
+from src.ui.screen_main_menu import MainMenuScreen
 
 
 class ScoreDisplayTests(unittest.TestCase):

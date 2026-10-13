@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
+
 from ..models import AppState
-from ..events import Event
+from .events import Event
 
 
 class Screen(ABC):
     """Base class for application screens."""
 
     @abstractmethod
-    def handle_event(self, event: Event) -> AppState:
+    def handle_event(
+        self,
+        event: Event,
+    ) -> AppState:
         """Handle an input event."""
 
     @abstractmethod
@@ -21,9 +25,13 @@ class Screen(ABC):
 
 class ExitScreen(Screen):
     """Dummy exit screen"""
+
     _self_app_state = AppState.EXIT
 
-    def handle_event(self, event: Event) -> AppState:
+    def handle_event(
+        self,
+        event: Event,
+    ) -> AppState:
         """Handle an input event."""
         return self._self_app_state
 

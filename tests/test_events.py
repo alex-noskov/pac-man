@@ -1,7 +1,7 @@
 """Typed application event factory contracts."""
 import unittest
 
-from src.events import EventFactory, EventType
+from src.ui.events import EventFactory, EventType
 
 
 class EventTests(unittest.TestCase):

@@ -1,14 +1,18 @@
-from .screen import Screen
 from ..models import AppState
-from ..graphics import Graphics
-from ..events import Event, EventType
-from ..ui import BLACK, YELLOW, Layout, AbsoluteRect, TITLE_TEXT_SCALE
+from .colors import BLACK, TITLE_TEXT_SCALE, YELLOW
+from .events import Event, EventType
+from .graphics import Graphics
+from .layout import AbsoluteRect, Layout
+from .screen_base import Screen
 
 
 class LevelCompleteScreen(Screen):
     """Level complete screen."""
 
-    def __init__(self, graphics: Graphics) -> None:
+    def __init__(
+        self,
+        graphics: Graphics,
+    ) -> None:
         """Build and cache the level-complete layout for the window."""
         self.graphics = graphics
         self._self_app_state = AppState.LEVEL_COMPLETE
@@ -23,18 +27,17 @@ class LevelCompleteScreen(Screen):
         self._gen_layout()
         self._cache_abs_layout()
 
-    def handle_event(self, event: Event) -> AppState:
+    def handle_event(
+        self,
+        event: Event,
+    ) -> AppState:
         """Handle input events."""
-
         if event.type == EventType.KEY_ENTER:
             return AppState.GAME
-
         if event.type == EventType.KEY_ESC:
             return AppState.MAIN_MENU
-
         if event.type == EventType.CLOSE:
             return AppState.EXIT
-
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -43,7 +46,6 @@ class LevelCompleteScreen(Screen):
 
     def render(self) -> AppState:
         """Render the level complete screen."""
-
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
 
@@ -69,12 +71,10 @@ class LevelCompleteScreen(Screen):
                 )
 
         self.graphics.refresh()
-
         return self._self_app_state
 
     def _gen_layout(self) -> None:
         """Generate the level complete rectangle."""
-
         self.layout.add_rect(
             xp=25,
             yp=40,
@@ -89,20 +89,16 @@ class LevelCompleteScreen(Screen):
 
     def _cache_abs_layout(self) -> None:
         """Cache absolute geometry."""
-
         abs_rect = self.layout.get_rect_absolute(
             "LEVEL_COMPLETE",
             self._width,
             self._height,
             TITLE_TEXT_SCALE,
         )
-
         if abs_rect is None:
             return
 
         abs_rect.color = YELLOW
-
         if abs_rect.text is not None:
             abs_rect.text.color = BLACK
-
         self._cache["LEVEL_COMPLETE"] = abs_rect

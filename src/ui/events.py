@@ -119,12 +119,19 @@ class EventFactory:
         return Event(EventType.TEXT, {"text": text})
 
     @staticmethod
-    def mouse_move(x: int, y: int) -> Event:
+    def mouse_move(
+        x: int,
+        y: int,
+    ) -> Event:
         """Create a pointer-motion event."""
         return Event(EventType.MOUSE_MOVE, {"x": x, "y": y})
 
     @staticmethod
-    def mouse_down(x: int, y: int, button: int) -> Event:
+    def mouse_down(
+        x: int,
+        y: int,
+        button: int,
+    ) -> Event:
         """Create a mouse-button event."""
         return Event(EventType.MOUSE_DOWN, {"x": x, "y": y, "button": button})
 

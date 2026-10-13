@@ -29,7 +29,10 @@ class Level(BaseModel):
 
     @field_validator('level_number', 'width', 'height', mode='before')
     @classmethod
-    def reject_booleans(cls, value: Any) -> Any:
+    def reject_booleans(
+        cls,
+        value: Any,
+    ) -> Any:
         """Do not silently turn boolean JSON values into integers."""
         if isinstance(value, bool):
             raise ValueError('Expected an integer, not a boolean')
@@ -67,7 +70,10 @@ class Config(BaseModel):
 
     @field_validator('*', mode='before')
     @classmethod
-    def reject_booleans(cls, value: Any) -> Any:
+    def reject_booleans(
+        cls,
+        value: Any,
+    ) -> Any:
         """Prevent boolean values from masquerading as game parameters."""
         if isinstance(value, bool):
             raise ValueError('Expected a config value, not a boolean')
@@ -75,13 +81,19 @@ class Config(BaseModel):
 
     @field_validator('seed', mode='before')
     @classmethod
-    def stringify_seed(cls, value: Any) -> Any:
+    def stringify_seed(
+        cls,
+        value: Any,
+    ) -> Any:
         """Keep the string seed API while accepting JSON integer seeds."""
         return str(value) if type(value) is int else value
 
     @field_validator('seed')
     @classmethod
-    def validate_seed(cls, value: str) -> str:
+    def validate_seed(
+        cls,
+        value: str,
+    ) -> str:
         """Require a positive integer so the first maze is reproducible."""
         seed = int(value)
         if not 1 <= seed <= 2**31 - 1:
@@ -90,7 +102,10 @@ class Config(BaseModel):
 
     @field_validator('pacgum')
     @classmethod
-    def clamp_pacgum(cls, value: int) -> int:
+    def clamp_pacgum(
+        cls,
+        value: int,
+    ) -> int:
         """Zero means all corridors; cap positive counts at maze capacity."""
         if value > 1600:
             print('Config pacgum exceeds maze capacity. Clamping to 1600.')
@@ -99,7 +114,10 @@ class Config(BaseModel):
 
     @field_validator('highscore_filename')
     @classmethod
-    def validate_filename(cls, value: str) -> str:
+    def validate_filename(
+        cls,
+        value: str,
+    ) -> str:
         """Reject empty names and characters unusable by file APIs."""
         if not value.strip() or '\x00' in value:
             raise ValueError('Expected a nonempty filesystem path')
@@ -108,7 +126,10 @@ class Config(BaseModel):
 
     @field_validator('levels')
     @classmethod
-    def pad_levels(cls, levels: list[Level]) -> list[Level]:
+    def pad_levels(
+        cls,
+        levels: list[Level],
+    ) -> list[Level]:
         """Preserve custom levels and append defaults to reach ten levels."""
         if len(levels) < 10:
             print('Config levels has fewer than ten entries. '

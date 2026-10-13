@@ -3,10 +3,10 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock
 
-from src.events import EventFactory
+from src.ui.events import EventFactory
 from src.models import AppState, Directions
 from src.parsing import Config
-from src.screens.game_screen import GameScreen
+from src.ui.screen_game import GameScreen
 
 
 class GameScreenTests(unittest.TestCase):

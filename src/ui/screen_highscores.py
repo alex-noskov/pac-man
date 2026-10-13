@@ -1,24 +1,25 @@
-from .screen import Screen
-from ..models import AppState
-from ..graphics import Graphics
-from ..events import Event, EventType
-from ..ui import (
-        WHITE,
-        BLACK,
-        YELLOW,
-        Layout,
-        AbsoluteRect,
-        NORMAL_TEXT_SCALE,
-        TITLE_TEXT_SCALE
-)
-
 from ..highscores import HighscoreStore
+from ..models import AppState
+from .colors import (
+    BLACK,
+    NORMAL_TEXT_SCALE,
+    TITLE_TEXT_SCALE,
+    WHITE,
+    YELLOW,
+)
+from .events import Event, EventType
+from .graphics import Graphics
+from .layout import AbsoluteRect, Layout
+from .screen_base import Screen
 
 
 class HighscoresScreen(Screen):
     """Highscores screen."""
 
-    def __init__(self, graphics: Graphics) -> None:
+    def __init__(
+        self,
+        graphics: Graphics,
+    ) -> None:
         """Build and cache the highscores layout for the graphics window."""
         self.graphics = graphics
         self.store: HighscoreStore | None = None
@@ -34,14 +35,15 @@ class HighscoresScreen(Screen):
         self._gen_layout()
         self._cache_abs_layout()
 
-    def handle_event(self, event: Event) -> AppState:
+    def handle_event(
+        self,
+        event: Event,
+    ) -> AppState:
         """Handle input events."""
         if event.type == EventType.KEY_ESC:
             return AppState.MAIN_MENU
-
         if event.type == EventType.CLOSE:
             return AppState.EXIT
-
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -64,21 +66,30 @@ class HighscoresScreen(Screen):
                 )
 
         entries = self.store.entries if self.store is not None else []
-        rows = [f"{i + 1:2} {e['name'].upper():10} {e['score']}"
-                for i, e in enumerate(entries)] or ['NO HIGHSCORES YET']
+        rows = [
+            f"{index + 1:2} {entry['name'].upper():10} {entry['score']}"
+            for index, entry in enumerate(entries)
+        ] or ['NO HIGHSCORES YET']
         for index, text in enumerate(rows):
             scale = NORMAL_TEXT_SCALE
             self.graphics.draw_text(
-                text, max(10, (self._width - len(text) * 6 * scale) // 2),
+                text,
+                max(10, (self._width - len(text) * 6 * scale) // 2),
                 self._height // 4 + index * self._height // 18,
-                WHITE, scale=scale, spacing=scale)
+                WHITE,
+                scale=scale,
+                spacing=scale,
+            )
         if self.store is not None and self.store.error:
-            self.graphics.draw_text('HIGHSCORE FILE ERROR - SEE CONSOLE',
-                                    10, self._height * 9 // 10, YELLOW,
-                                    scale=NORMAL_TEXT_SCALE,
-                                    spacing=NORMAL_TEXT_SCALE)
+            self.graphics.draw_text(
+                'HIGHSCORE FILE ERROR - SEE CONSOLE',
+                10,
+                self._height * 9 // 10,
+                YELLOW,
+                scale=NORMAL_TEXT_SCALE,
+                spacing=NORMAL_TEXT_SCALE,
+            )
         self.graphics.refresh()
-
         return self._self_app_state
 
     def _gen_layout(self) -> None:
@@ -108,22 +119,24 @@ class HighscoresScreen(Screen):
     def _cache_abs_layout(self) -> None:
         """Cache pixel geometry and text colors for the static labels."""
         for name in ("TITLE", "BACK_INFO"):
+            scale = (
+                TITLE_TEXT_SCALE
+                if name == 'TITLE'
+                else NORMAL_TEXT_SCALE
+            )
             abs_rect = self.layout.get_rect_absolute(
                 name,
                 self._width,
                 self._height,
-                TITLE_TEXT_SCALE if name == 'TITLE' else NORMAL_TEXT_SCALE,
+                scale,
             )
-
             if abs_rect is None:
                 continue
 
             abs_rect.color = BLACK
-
             if abs_rect.text is not None:
                 if name == "TITLE":
                     abs_rect.text.color = YELLOW
                 else:
                     abs_rect.text.color = WHITE
-
             self._cache[name] = abs_rect

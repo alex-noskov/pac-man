@@ -3,14 +3,17 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock
 
-from src import ui
-from src.ui import BLACK
+from src.ui import colors as ui
+from src.ui.colors import BLACK
 from src.highscores import HighscoreStore
 from src.models import AppState
 from src.parsing import Config, parse_conf
-from src.screens import (EndScreen, GameScreen, HighscoresScreen,
-                         InstructionsScreen, LevelCompleteScreen,
-                         MainMenuScreen)
+from src.ui.screen_end import EndScreen
+from src.ui.screen_game import GameScreen
+from src.ui.screen_highscores import HighscoresScreen
+from src.ui.screen_instructions import InstructionsScreen
+from src.ui.screen_level_complete import LevelCompleteScreen
+from src.ui.screen_main_menu import MainMenuScreen
 
 
 class FixedUiTests(unittest.TestCase):

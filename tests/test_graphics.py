@@ -4,8 +4,8 @@ from typing import Callable, Literal
 import unittest
 from unittest.mock import patch
 
-from src.events import Event, EventType
-from src.mlx_wrapper.mlx_wrapper import ImageLayer, MlxWrapper
+from src.ui.events import Event, EventType
+from src.ui.mlx_wrapper import ImageLayer, MlxWrapper
 
 
 class FakeMlx:
@@ -96,7 +96,7 @@ class FakeMlx:
 def make_wrapper(native: FakeMlx,
                  callback: Callable[[deque[Event]], None] = lambda _: None
                  ) -> MlxWrapper:
-    with patch("src.mlx_wrapper.mlx_wrapper.Mlx", return_value=native):
+    with patch("src.ui.mlx_wrapper.Mlx", return_value=native):
         return MlxWrapper(2, 2, callback)
 
 
@@ -136,7 +136,7 @@ class ResourceTests(unittest.TestCase):
     def test_oversized_window_is_fitted_to_the_display(self) -> None:
         """All menu items and maze cells must fit on the actual monitor."""
         native = FakeMlx(stride=4000)
-        with patch('src.mlx_wrapper.mlx_wrapper.Mlx', return_value=native):
+        with patch('src.ui.mlx_wrapper.Mlx', return_value=native):
             wrapper = MlxWrapper(900, 2000, lambda _: None)
         self.assertEqual((wrapper.width, wrapper.height), (900, 704))
         self.assertEqual(wrapper.get_layer('main').height, 704)

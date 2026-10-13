@@ -150,14 +150,14 @@ positions; no responsive layout/scaling abstraction has been added.
 
 - Window: `config.json` (`window_width`, `window_height`), with fallback defaults
   in `src/parsing.py`, `Config.window_width` and `Config.window_height`.
-- Normal/menu/name-entry text: `src/ui.py`, `NORMAL_TEXT_SCALE = 2`.
-- Titles: `src/ui.py`, `TITLE_TEXT_SCALE = 3`.
-- Gameplay HUD/status text: `src/ui.py`, `HUD_TEXT_SCALE = 2`.
+- Normal/menu/name-entry text: `src/ui/colors.py`, `NORMAL_TEXT_SCALE = 2`.
+- Titles: `src/ui/colors.py`, `TITLE_TEXT_SCALE = 3`.
+- Gameplay HUD/status text: `src/ui/colors.py`, `HUD_TEXT_SCALE = 2`.
 - Base glyphs are 5x8 pixels; scale 2 produces 10x16 glyphs and scale 3 gives
   15x24 glyphs. Character spacing is passed explicitly alongside the font size.
 - Name box and save panel: the `NAME_BOX_*` and `SAVE_BUTTON_*` constants at the
-  top of `src/screens/end_screen.py`, with fixed vertical positions in `render`.
-- Maze space: `src/screens/game_screen.py`, `HUD_HEIGHT = 80` and
+  top of `src/ui/screen_end.py`, with fixed vertical positions in `render`.
+- Maze space: `src/ui/screen_game.py`, `HUD_HEIGHT = 80` and
   `MAZE_MARGIN = 20`. The existing cell-size calculation fits each level's maze
   into the remaining space; it does not change the UI fonts.
 
@@ -188,22 +188,27 @@ the C callback boundary and reports errors only after returning to Python.
 ## General Software Architecture
 
 ```text
-pac-man.py / src.__main__
+pac-man.py
   -> parsing.Config
-  -> pac_man.App (screen/lifecycle coordinator)
-       -> GameScreen -> GameSession -> Maze -> assigned MazeGenerator
-       -> MainMenu / Instructions / Highscores / LevelComplete / EndScreen
+  -> app.App (screen/lifecycle coordinator)
+       -> ui screen classes -> GameSession -> Maze -> assigned MazeGenerator
        -> HighscoreStore (validated atomic persistence)
-       -> Graphics -> MlxWrapper -> supplied MLX library
+       -> ui/graphics.Graphics -> ui/mlx_wrapper.MlxWrapper
+          -> supplied MLX library
 ```
 
 - `src/session.py`: headless `GameSession`, `Actor`, `Ghost`; gameplay and timers.
 - `src/maze.py`: validated external-generator adapter and corridor graph queries.
-- `src/screens/`: event handling and presentation, using the existing `Screen` API.
-- `src/pac_man.py`: new-run, pause, next-level, victory, game-over, and exit routing.
-- `src/events.py`: typed, native-independent actions and separate text events.
-- `src/graphics.py`, `src/mlx_wrapper/`: drawing, native input, and resource ownership.
-- `src/ui.py`, `src/font_map.py`, `src/colors.py`: retained layout and drawing data.
+- `src/ui/screen_*.py`: screen event handling and presentation through the
+  shared `Screen` API.
+- `src/app.py`: new-run, pause, next-level, victory, game-over, and exit routing.
+- `src/ui/events.py`: typed, native-independent actions and separate text events.
+- `src/ui/graphics.py`, `src/ui/mlx_wrapper.py`: drawing, native input, and
+  resource ownership.
+- `src/ui/layout.py`, `src/ui/colors.py`, `src/ui/font_map.py`: layout and
+  drawing data.
+- `src/ui/` is the presentation/input boundary; `session.py` and `maze.py`
+  stay graphics-independent and do not import UI modules.
 - Obsolete pixel-movement and pygame prototypes were removed during the final
   readability cleanup. There is one live movement model (`GameSession`) and one
   graphics backend (MLX); historical prototypes remain available in Git history.

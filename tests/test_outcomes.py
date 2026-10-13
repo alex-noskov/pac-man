@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Any, cast
 from unittest.mock import MagicMock
 
-from src.events import EventFactory
+from src.ui.events import EventFactory
 from src.highscores import HighscoreStore
 from src.models import AppState
-from src.screens import EndScreen
+from src.ui.screen_end import EndScreen
 
 
 class OutcomeTests(unittest.TestCase):

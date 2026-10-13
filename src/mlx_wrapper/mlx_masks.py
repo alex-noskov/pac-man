@@ -1,1 +1,0 @@
-POINTER_MOTION_MASK = 1 << 6

@@ -2,7 +2,7 @@
 
 ## Start with this flow
 
-`pac-man.py` checks the command-line argument, `parse` builds a safe `Config`,
+`pac-man.py` checks the command-line argument, `parse_conf` builds a safe `Config`,
 and `App` opens MLX and shows the main menu. Choosing Play starts a fresh game.
 Each frame handles input, updates the game, and draws the current screen.
 
@@ -20,20 +20,21 @@ Victory or game over -> type name -> Enter saves -> main menu
 | Order | File/classes | What to explain |
 | --- | --- | --- |
 | 1 | `pac-man.py` | Exactly one config argument; usage/startup errors are printed without a traceback. |
-| 2 | `src/parsing.py`: `Config`, `Level`, `parse` | Commented JSON, unknown keys, field validation and safe defaults. Gameplay reads these typed fields directly. |
-| 3 | `src/models/__init__.py`, `src/events.py` | `AppState` names screens; `Directions` names grid moves; typed `Event` objects connect native keys to the app. Printable keys also emit separate name-entry text events. |
+| 2 | `src/parsing.py`: `Config`, `Level`, `parse_conf` | Commented JSON, unknown keys, field validation and safe defaults. Gameplay reads these typed fields directly. |
+| 3 | `src/models.py`, `src/ui/events.py` | `AppState` names screens; `Directions` names grid moves; typed `Event` objects connect native keys to the app. Printable keys also emit separate name-entry text events. |
 | 4 | `src/maze.py`: `Maze` | Use the assigned generator unchanged with `perfect=False`; validate wall bits; list open neighbors; find reachable cells for safe spawn/dot placement. |
 | 5 | `src/session.py`: `Actor`, `Ghost`, `GameSession` | Actor position/direction, the shared simple ghost rule, scoring, timers, collisions, lives and level progression. Testable without a window. |
-| 6 | `src/pac_man.py`: `App` | Each frame drains events, updates, renders and applies requested screen transitions. New runs reset; new levels retain score/lives. |
-| 7 | `src/screens/game_screen.py`: `GameScreen` | Convert elapsed monotonic seconds into simulation updates; render the maze, actors, fixed HUD and pause choices. Other menus keep the same `Screen` interface. |
-| 8 | `src/screens/end_screen.py`: `EndScreen` | Display victory/loss, edit a ten-character name, and use Enter to save or Escape to leave without saving. Failed saves can be retried without duplicate entries. |
+| 6 | `src/app.py`: `App` | Each frame drains events, updates, renders and applies requested screen transitions. New runs reset; new levels retain score/lives. |
+| 7 | `src/ui/screen_game.py`: `GameScreen` | Convert elapsed monotonic seconds into simulation updates; render the maze, actors, fixed HUD and pause choices. Other menus keep the same `Screen` interface. |
+| 8 | `src/ui/screen_end.py`: `EndScreen` | Display victory/loss, edit a ten-character name, and use Enter to save or Escape to leave without saving. Failed saves can be retried without duplicate entries. |
 | 9 | `src/highscores.py`: `HighscoreStore` | Validate and rank the top ten; load at startup; save with a same-directory temporary file and atomic replacement. |
-| 10 | `src/graphics.py`, `src/mlx_wrapper/mlx_wrapper.py` | `Graphics` draws text/shapes; `MlxWrapper`/`ImageLayer` own native images/window, key hooks, pixel stride/opacity and cleanup. |
+| 10 | `src/ui/graphics.py`, `src/ui/mlx_wrapper.py` | `Graphics` draws text/shapes; `MlxWrapper`/`ImageLayer` own native images/window, key hooks, pixel stride/opacity and cleanup. |
 
 There is only one live movement model and one backend. The unused pixel/frame
-PacMan and pygame prototypes were removed; their history is still in Git. The
-trimmed `src/ui.py` only supports the menu rectangle/text layout that is actually
-used. Its font constants remain fixed: normal/HUD scale 2, title scale 3.
+PacMan and pygame prototypes were removed; their history is still in Git.
+The `src/ui/` package keeps screens, input events, layout helpers, bitmap
+font rendering, and the MLX boundary together. Its font constants remain fixed:
+normal/HUD scale 2, title scale 3.
 
 ## Explain the gameplay rules in plain terms
 
@@ -74,6 +75,7 @@ normal construction always creates its game screen. No new frameworks were added
 Run `make validate`. During gameplay, C enables evaluation controls: I invincibility,
 F freeze, N level completion, L extra life, B player speed, V edible ghosts. Pause
 with P/Escape. Show normal play, power expiration, a lost life, a fresh run, victory,
-and name entry/highscores. Know the fixed UI sizes in `src/ui.py` and `config.json`.
+and name entry/highscores. Know the fixed UI sizes in `src/ui/colors.py` and
+`config.json`.
 The supplied generator itself must remain unchanged; it can be reinstalled during
 review. Review the code and practice explaining it to a peer in your own words.

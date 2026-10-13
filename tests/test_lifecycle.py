@@ -6,7 +6,7 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
-from src.events import EventFactory
+from src.ui.events import EventFactory
 from src.models import AppState
 from src.app import App
 from src.parsing import Config, parse_conf

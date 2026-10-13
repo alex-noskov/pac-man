@@ -1,13 +1,18 @@
 import time
-from .parsing import Config
-from .models import AppState
-from .screens import (GameScreen, MainMenuScreen, InstructionsScreen,
-                      HighscoresScreen, ExitScreen, Screen,
-                      LevelCompleteScreen, EndScreen)
-from .events import Event, EventType
-from .graphics import Graphics
-from .highscores import HighscoreStore
 from collections import deque
+
+from .highscores import HighscoreStore
+from .models import AppState
+from .parsing import Config
+from .ui.events import Event, EventType
+from .ui.graphics import Graphics
+from .ui.screen_base import ExitScreen, Screen
+from .ui.screen_end import EndScreen
+from .ui.screen_game import GameScreen
+from .ui.screen_highscores import HighscoresScreen
+from .ui.screen_instructions import InstructionsScreen
+from .ui.screen_level_complete import LevelCompleteScreen
+from .ui.screen_main_menu import MainMenuScreen
 
 FPS = 60
 FRAME_TIME = 1 / FPS
@@ -16,8 +21,11 @@ FRAME_TIME = 1 / FPS
 class App:
     """Coordinate shared screens and explicit game lifecycle transitions."""
 
-    def __init__(self, config: Config,
-                 state: AppState = AppState.MAIN_MENU) -> None:
+    def __init__(
+        self,
+        config: Config,
+        state: AppState = AppState.MAIN_MENU,
+    ) -> None:
         """Create graphics, shared highscores, and the initial screen."""
         self.config = config
         self.state = state
@@ -46,53 +54,71 @@ class App:
             AppState.PAUSE: self.game_screen,
             AppState.ERROR: self.game_screen,
             AppState.GAME_OVER: EndScreen(
-                self.graphics, self.highscores, AppState.GAME_OVER),
+                self.graphics,
+                self.highscores,
+                AppState.GAME_OVER,
+            ),
             AppState.VICTORY: EndScreen(
-                self.graphics, self.highscores, AppState.VICTORY),
+                self.graphics,
+                self.highscores,
+                AppState.VICTORY,
+            ),
             AppState.MAIN_MENU: menu,
             AppState.INSTRUCTIONS: InstructionsScreen(self.graphics),
             AppState.HIGHSCORES: scores,
             AppState.LEVEL_COMPLETE: LevelCompleteScreen(self.graphics),
             AppState.EXIT: ExitScreen(),
         }
-
         self.screen = self.screens[self.state]
 
-    def app_loop(self, event_buffer: deque[Event]) -> None:
+    def app_loop(
+        self,
+        event_buffer: deque[Event],
+    ) -> None:
         """Drain input, simulate, and render; CLOSE is global."""
         start = time.perf_counter()
         while event_buffer:
             event = event_buffer.popleft()
-            next_state = (AppState.EXIT if event.type == EventType.CLOSE
-                          else self.screen.handle_event(event))
+            if event.type == EventType.CLOSE:
+                next_state = AppState.EXIT
+            else:
+                next_state = self.screen.handle_event(event)
             if next_state != self.state:
                 self._transition_to(next_state)
             if self.state == AppState.EXIT:
                 self.graphics.stop_loop()
                 return
+
         next_state = self.screen.update()
         if next_state != self.state:
             self._transition_to(next_state)
         if self.state == AppState.EXIT:
             self.graphics.stop_loop()
             return
+
         before_sleep = time.perf_counter() - start
         time.sleep(max(0, FRAME_TIME - before_sleep))
+
         next_state = self.screen.render()
         if next_state != self.state:
             self._transition_to(next_state)
         if self.state == AppState.EXIT:
             self.graphics.stop_loop()
 
-    def _transition_to(self, state: AppState) -> None:
+    def _transition_to(
+        self,
+        state: AppState,
+    ) -> None:
         """Initialize runs, advance levels, and capture terminal scores."""
         previous = self.state
         if hasattr(self, 'game_screen'):
             if state == AppState.GAME and previous == AppState.MAIN_MENU:
                 self.game_screen.new_game()
                 state = self.game_screen.session.state
-            elif (state == AppState.GAME
-                  and previous == AppState.LEVEL_COMPLETE):
+            elif (
+                state == AppState.GAME
+                and previous == AppState.LEVEL_COMPLETE
+            ):
                 self.game_screen.next_level()
                 state = self.game_screen.session.state
             if state in (AppState.GAME_OVER, AppState.VICTORY):

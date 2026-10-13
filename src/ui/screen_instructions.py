@@ -1,14 +1,18 @@
-from .screen import Screen
 from ..models import AppState
-from ..graphics import Graphics
-from ..events import Event, EventType
-from ..ui import WHITE, BLACK, YELLOW, Layout, AbsoluteRect, NORMAL_TEXT_SCALE
+from .colors import BLACK, NORMAL_TEXT_SCALE, WHITE, YELLOW
+from .events import Event, EventType
+from .graphics import Graphics
+from .layout import AbsoluteRect, Layout
+from .screen_base import Screen
 
 
 class InstructionsScreen(Screen):
     """Instructions screen."""
 
-    def __init__(self, graphics: Graphics) -> None:
+    def __init__(
+        self,
+        graphics: Graphics,
+    ) -> None:
         """Build gameplay instructions and cache their window-sized layout."""
         self.graphics = graphics
         self._self_app_state = AppState.INSTRUCTIONS
@@ -41,14 +45,15 @@ class InstructionsScreen(Screen):
         self._gen_layout()
         self._cache_abs_layout()
 
-    def handle_event(self, event: Event) -> AppState:
+    def handle_event(
+        self,
+        event: Event,
+    ) -> AppState:
         """Handle input events."""
         if event.type == EventType.KEY_ESC:
             return AppState.MAIN_MENU
-
         if event.type == EventType.CLOSE:
             return AppState.EXIT
-
         return self._self_app_state
 
     def update(self) -> AppState:
@@ -71,7 +76,6 @@ class InstructionsScreen(Screen):
                 )
 
         self.graphics.refresh()
-
         return self._self_app_state
 
     def _gen_layout(self) -> None:
@@ -89,7 +93,6 @@ class InstructionsScreen(Screen):
 
         for index, text in enumerate(self._instructions):
             name = f"INSTRUCTION_{index}"
-
             self.layout.add_rect(
                 xp=0,
                 yp=start_y + index * (line_height + line_spacing),
@@ -98,7 +101,6 @@ class InstructionsScreen(Screen):
                 name=name,
                 text=text,
             )
-
             self.layout.center_rect_x(name)
 
         # Bottom "press esc..." message.
@@ -121,16 +123,13 @@ class InstructionsScreen(Screen):
                 self._height,
                 NORMAL_TEXT_SCALE,
             )
-
             if abs_rect is None:
                 continue
 
             abs_rect.color = BLACK
-
             if abs_rect.text is not None:
                 if name == "BACK_INFO":
                     abs_rect.text.color = WHITE
                 else:
                     abs_rect.text.color = YELLOW
-
             self._cache[name] = abs_rect

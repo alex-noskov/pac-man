@@ -2,22 +2,72 @@
 from collections import deque
 from typing import Any, Callable
 from mlx import Mlx
-from .mlx_keycodes import (
-    KEY_ENTER, KEY_UP, KEY_DOWN, KEY_ESC, KEY_LEFT, KEY_RIGHT,
-    KEY_BACKSPACE,
-)
-from .mlx_constants import (
-    CLIENT_MESSAGE, MOTION_NOTIFY, KEY_PRESS, KEY_PRESS_MASK,
-)
-from .mlx_masks import POINTER_MOTION_MASK
-from ..events import Event, EventFactory
+
+from .events import Event, EventFactory
+
+
+# X11 event types used by MLX 2.2.
+#
+# These values come from the X11/XCB protocol.
+
+KEY_PRESS = 2
+KEY_RELEASE = 3
+
+BUTTON_PRESS = 4
+BUTTON_RELEASE = 5
+
+MOTION_NOTIFY = 6
+
+EXPOSE = 12
+
+DESTROY_NOTIFY = 17
+
+CLIENT_MESSAGE = 33
+
+
+# X11 event masks.
+#
+# These are bit masks used with mlx_hook().
+KEY_PRESS_MASK = 1
+KEY_RELEASE_MASK = 2
+
+
+"""X11 keysyms returned by the assigned MLX 2.2 XCB backend."""
+KEY_ESC = 65307
+KEY_ENTER = 65293
+KEY_BACKSPACE = 65288
+
+KEY_W = 119
+KEY_A = 97
+KEY_S = 115
+KEY_D = 100
+KEY_P = 112
+KEY_C = 99
+KEY_I = 105
+KEY_N = 110
+KEY_F = 102
+KEY_L = 108
+KEY_B = 98
+KEY_V = 118
+
+KEY_UP = 65362
+KEY_DOWN = 65364
+KEY_LEFT = 65361
+KEY_RIGHT = 65363
+
+POINTER_MOTION_MASK = 1 << 6
 
 
 class ImageLayer:
     """One independent mlx image buffer. Nothing else can alias into it."""
 
-    def __init__(self, mlx_instance: Any, mlx_ptr: Any,
-                 width: int, height: int) -> None:
+    def __init__(
+        self,
+        mlx_instance: Any,
+        mlx_ptr: Any,
+        width: int,
+        height: int,
+    ) -> None:
         """Allocate and validate a transparent native image."""
         self.mlx = mlx_instance
         self.mlx_ptr = mlx_ptr
@@ -30,11 +80,18 @@ class ImageLayer:
             raise RuntimeError("MLX image creation failed")
 
         try:
-            (self.data, self.bits_per_pixel, self.line_length,
-             self.endian) = mlx_instance.mlx_get_data_addr(self.image)
-            if (self.bits_per_pixel != 32 or self.endian not in (0, 1)
-                    or self.line_length < width * 4
-                    or len(self.data) < self.line_length * height):
+            (
+                self.data,
+                self.bits_per_pixel,
+                self.line_length,
+                self.endian,
+            ) = mlx_instance.mlx_get_data_addr(self.image)
+            if (
+                self.bits_per_pixel != 32
+                or self.endian not in (0, 1)
+                or self.line_length < width * 4
+                or len(self.data) < self.line_length * height
+            ):
                 raise RuntimeError("Unsupported MLX image layout")
             self.bytes_per_pixel = 4
             self.clear()
@@ -63,21 +120,37 @@ class ImageLayer:
         self._require_alive()
         self.data[:] = bytes(len(self.data))
 
-    def fill(self, color: int) -> None:
+    def fill(
+        self,
+        color: int,
+    ) -> None:
         """Fill visible pixels with an ARGB opacity color."""
         self.put_rectangle(0, 0, self.width, self.height, color)
 
-    def put_pixel(self, x: int, y: int, color: int) -> None:
+    def put_pixel(
+        self,
+        x: int,
+        y: int,
+        color: int,
+    ) -> None:
         """Write one pixel, silently clipping out-of-bounds coordinates."""
         self._require_alive()
         if not (0 <= x < self.width and 0 <= y < self.height):
             return
         offset = y * self.line_length + x * self.bytes_per_pixel
         self.data[offset:offset + 4] = (color & 0xFFFFFFFF).to_bytes(
-            4, "little" if self.endian == 0 else "big")
+            4,
+            "little" if self.endian == 0 else "big",
+        )
 
-    def put_rectangle(self, x: int, y: int, width: int, height: int,
-                      color: int) -> None:
+    def put_rectangle(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: int,
+    ) -> None:
         """Write a clipped rectangle using contiguous row writes."""
         self._require_alive()
         left, right = max(0, x), min(self.width, x + width)
@@ -86,7 +159,9 @@ class ImageLayer:
             return
         # MLX's format selects byte order; each row respects native padding.
         pixel = (color & 0xFFFFFFFF).to_bytes(
-            4, "little" if self.endian == 0 else "big")
+            4,
+            "little" if self.endian == 0 else "big",
+        )
         row = pixel * (right - left)
         for py in range(top, bottom):
             offset = py * self.line_length + left * 4
@@ -96,8 +171,12 @@ class ImageLayer:
 class MlxWrapper:
     """Manage a window and independent ARGB layers with native blending."""
 
-    def __init__(self, width: int, height: int,
-                 loop_callback: Callable[[deque[Event]], None]) -> None:
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        loop_callback: Callable[[deque[Event]], None],
+    ) -> None:
         """Create a screen-bounded window, layers, and frame callback state."""
         self.width = width
         self.height = height
@@ -120,17 +199,26 @@ class MlxWrapper:
             if not self.mlx_ptr:
                 raise RuntimeError("MLX initialization failed")
             _, screen_width, screen_height = self.mlx.mlx_get_screen_size(
-                self.mlx_ptr)
+                self.mlx_ptr,
+            )
             width = min(width, max(1, int(screen_width) - 64))
             height = min(height, max(1, int(screen_height) - 64))
             self.width, self.height = width, height
             self.window = self.mlx.mlx_new_window(
-                self.mlx_ptr, width, height, "Pac-Man")
+                self.mlx_ptr,
+                width,
+                height,
+                "Pac-Man",
+            )
             if not self.window:
                 raise RuntimeError("MLX window creation failed")
             self.create_layer("main")
-            self._background = ImageLayer(self.mlx, self.mlx_ptr,
-                                          width, height)
+            self._background = ImageLayer(
+                self.mlx,
+                self.mlx_ptr,
+                width,
+                height,
+            )
             self._background.fill(0xFF000000)
         except BaseException:
             try:
@@ -148,7 +236,10 @@ class MlxWrapper:
     # Layer management
     # ------------------------------------------------------------------
 
-    def create_layer(self, name: str) -> None:
+    def create_layer(
+        self,
+        name: str,
+    ) -> None:
         """Create a new independent drawing surface named `name`.
 
         A layer you draw to once and never clear() *is* the cache —
@@ -162,33 +253,52 @@ class MlxWrapper:
         self._layers[name] = layer
         self._layer_order.append(name)
 
-    def remove_layer(self, name: str) -> None:
+    def remove_layer(
+        self,
+        name: str,
+    ) -> None:
         """Remove and destroy a layer; missing layers are a no-op."""
         layer = self._layers.pop(name, None)
         if layer is not None:
             self._layer_order = [n for n in self._layer_order if n != name]
             layer.destroy()
 
-    def has_layer(self, name: str) -> bool:
+    def has_layer(
+        self,
+        name: str,
+    ) -> bool:
         """Report whether a named drawing surface exists."""
         return name in self._layers
 
-    def get_layer(self, name: str) -> ImageLayer:
+    def get_layer(
+        self,
+        name: str,
+    ) -> ImageLayer:
         """Return a layer, raising KeyError for unknown names."""
         return self._layers[name]
 
-    def set_layer_order(self, order: list[str]) -> None:
+    def set_layer_order(
+        self,
+        order: list[str],
+    ) -> None:
         """Bottom-to-top draw order, e.g. ['main', 'pacman', 'ghosts']."""
         missing = [n for n in order if n not in self._layers]
         if missing:
             raise KeyError(f"Unknown layer(s): {missing}")
         self._layer_order = list(order)
 
-    def clear_layer(self, name: str) -> None:
+    def clear_layer(
+        self,
+        name: str,
+    ) -> None:
         """Reset a layer to fully transparent pixels."""
         self._layers[name].clear()
 
-    def fill_layer(self, name: str, color: int) -> None:
+    def fill_layer(
+        self,
+        name: str,
+        color: int,
+    ) -> None:
         """Fill a named layer using an ARGB opacity color."""
         self._layers[name].fill(color)
 
@@ -196,13 +306,25 @@ class MlxWrapper:
     # Drawing (layer-aware)
     # ------------------------------------------------------------------
 
-    def put_pixel(self, x: int, y: int, color: int,
-                  layer: str = "main") -> None:
+    def put_pixel(
+        self,
+        x: int,
+        y: int,
+        color: int,
+        layer: str = "main",
+    ) -> None:
         """Write a clipped pixel to a named layer."""
         self._layers[layer].put_pixel(x, y, color)
 
-    def put_rectangle(self, x: int, y: int, width: int, height: int,
-                      color: int, layer: str = "main") -> None:
+    def put_rectangle(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: int,
+        layer: str = "main",
+    ) -> None:
         """Write a clipped rectangle to a named layer."""
         self._layers[layer].put_rectangle(x, y, width, height, color)
 
@@ -210,7 +332,10 @@ class MlxWrapper:
     # Native input and guarded event loop
     # ------------------------------------------------------------------
 
-    def _guard_callback(self, action: Callable[[], None]) -> None:
+    def _guard_callback(
+        self,
+        action: Callable[[], None],
+    ) -> None:
         """Contain even BaseException at the ctypes callback boundary."""
         if self._closed or self._stopped or self._callback_error is not None:
             return
@@ -224,22 +349,45 @@ class MlxWrapper:
                 # Never let the error handler itself escape a C callback.
                 pass
 
-    def mouse_press(self, button: int, x: int, y: int,
-                    xvar: object) -> None:
+    def mouse_press(
+        self,
+        button: int,
+        x: int,
+        y: int,
+        xvar: object,
+    ) -> None:
         """Queue a mouse-button event safely from the native callback."""
-        self._guard_callback(lambda: self._event_buffer.append(
-            EventFactory.mouse_down(x, y, button)))
+        self._guard_callback(
+            lambda: self._event_buffer.append(
+                EventFactory.mouse_down(x, y, button)
+            )
+        )
 
-    def mouse_move(self, x: int, y: int, xvar: object) -> None:
+    def mouse_move(
+        self,
+        x: int,
+        y: int,
+        xvar: object,
+    ) -> None:
         """Queue pointer motion safely from the native callback."""
-        self._guard_callback(lambda: self._event_buffer.append(
-            EventFactory.mouse_move(x, y)))
+        self._guard_callback(
+            lambda: self._event_buffer.append(
+                EventFactory.mouse_move(x, y)
+            )
+        )
 
-    def key_pressed(self, keycode: int, xvar: object) -> None:
+    def key_pressed(
+        self,
+        keycode: int,
+        xvar: object,
+    ) -> None:
         """Queue control and text events separately for the same key."""
         self._guard_callback(lambda: self._queue_key(keycode))
 
-    def _queue_key(self, keycode: int) -> None:
+    def _queue_key(
+        self,
+        keycode: int,
+    ) -> None:
         """Queue mapped controls and printable text for the supplied keysym."""
         controls: dict[int, Callable[[], Event]] = {
             KEY_ESC: EventFactory.key_esc,
@@ -267,26 +415,40 @@ class MlxWrapper:
         factory = controls.get(code)
         if factory is not None:
             self._event_buffer.append(factory())
-        if (48 <= keycode <= 57 or 65 <= keycode <= 90
-                or 97 <= keycode <= 122 or keycode == 32):
+        if (
+            48 <= keycode <= 57
+            or 65 <= keycode <= 90
+            or 97 <= keycode <= 122
+            or keycode == 32
+        ):
             self._event_buffer.append(EventFactory.text(chr(keycode)))
 
-    def window_closed(self, xvar: object) -> None:
+    def window_closed(
+        self,
+        xvar: object,
+    ) -> None:
         """Deliver CLOSE on the next frame, then stop regardless of screen."""
+
         def close() -> None:
             """Queue a single close event and mark shutdown as requested."""
             if not self._close_requested:
                 self._event_buffer.append(EventFactory.close())
                 self._close_requested = True
+
         self._guard_callback(close)
 
-    def loop(self, xvar: object) -> None:
+    def loop(
+        self,
+        xvar: object,
+    ) -> None:
         """Run one frame without allowing exceptions into native MLX."""
+
         def frame() -> None:
             """Deliver events to the app and stop after a close request."""
             self._loop_callback(self._event_buffer)
             if self._close_requested:
                 self.stop_loop()
+
         self._guard_callback(frame)
 
     def start(self) -> None:
@@ -298,13 +460,28 @@ class MlxWrapper:
         try:
             # mlx_key_hook in this vendor binds KEY_RELEASE. Movement and
             # text input must react on press, so use the generic typed hook.
-            self.mlx.mlx_hook(self.window, KEY_PRESS,
-                              KEY_PRESS_MASK, self.key_pressed, None)
+            self.mlx.mlx_hook(
+                self.window,
+                KEY_PRESS,
+                KEY_PRESS_MASK,
+                self.key_pressed,
+                None,
+            )
             self.mlx.mlx_mouse_hook(self.window, self.mouse_press, None)
-            self.mlx.mlx_hook(self.window, MOTION_NOTIFY,
-                              POINTER_MOTION_MASK, self.mouse_move, None)
-            self.mlx.mlx_hook(self.window, CLIENT_MESSAGE,
-                              0, self.window_closed, None)
+            self.mlx.mlx_hook(
+                self.window,
+                MOTION_NOTIFY,
+                POINTER_MOTION_MASK,
+                self.mouse_move,
+                None,
+            )
+            self.mlx.mlx_hook(
+                self.window,
+                CLIENT_MESSAGE,
+                0,
+                self.window_closed,
+                None,
+            )
             self.mlx.mlx_loop_hook(self.mlx_ptr, self.loop, None)
             if not self._stopped:
                 self._running = True
@@ -366,7 +543,8 @@ class MlxWrapper:
                 errors.append(error)
         if errors:
             raise RuntimeError(
-                f"MLX cleanup failed: {errors[0]}") from errors[0]
+                f"MLX cleanup failed: {errors[0]}"
+            ) from errors[0]
 
     # ------------------------------------------------------------------
     # Compositing
@@ -381,7 +559,12 @@ class MlxWrapper:
         self._require_open()
         assert self._background is not None
         self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr, self.window, self._background.image, 0, 0)
+            self.mlx_ptr,
+            self.window,
+            self._background.image,
+            0,
+            0,
+        )
         for name in self._layer_order:
             layer = self._layers[name]
             self.mlx.mlx_put_image_to_window(

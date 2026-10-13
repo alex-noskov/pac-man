@@ -1,21 +1,5 @@
 import math
 
-BLACK = 0xFF000000
-WHITE = 0xFFFFFFFF
-RED = 0xFFFF0000
-YELLOW = 0xFFFFFF00
-PURPLE = 0xFF800080
-BLUE = 0xFF0000FF
-ORANGE = 0xFFFFA500
-GREEN = 0xFF00FF00
-PINK = 0xFFFF69B4
-TRANSPARENT = 0x00000000
-
-# Fixed bitmap magnification: base glyphs are 5 pixels wide, 8 high.
-NORMAL_TEXT_SCALE = 2
-TITLE_TEXT_SCALE = 3
-HUD_TEXT_SCALE = 2
-
 
 class AbsoluteText:
     """Store text with pixel placement, glyph scale, spacing, and color."""
@@ -59,14 +43,23 @@ class AbsoluteRect:
         self.color = -1
 
 
-class Rect():
+class Rect:
     """Represent percentage bounds with text and relative text-area insets."""
 
-    def __init__(self, name: str, xp: float = 0, yp: float = 0,
-                 widthp: float = 0, heightp: float = 0, text: str = "",
-                 text_spacing: int = 1,
-                 x_offsetp: float = 0, y_offsetp: float = 0,
-                 x_offsetp_rev: float = 0, y_offsetp_rev: float = 0) -> None:
+    def __init__(
+        self,
+        name: str,
+        xp: float = 0,
+        yp: float = 0,
+        widthp: float = 0,
+        heightp: float = 0,
+        text: str = "",
+        text_spacing: int = 1,
+        x_offsetp: float = 0,
+        y_offsetp: float = 0,
+        x_offsetp_rev: float = 0,
+        y_offsetp_rev: float = 0,
+    ) -> None:
         """Store bounds and left/top/right/bottom text-area insets.
 
         x_offsetp/y_offsetp are left/top; their _rev versions are right/bottom.
@@ -85,19 +78,27 @@ class Rect():
         self.y_offsetp_rev = y_offsetp_rev
 
 
-class Layout():
+class Layout:
     """Manage named percentage rectangles and convert them to pixels."""
 
     def __init__(self) -> None:
         """Initialize the named menu rectangles."""
         self._rects: dict[str, Rect] = {}
 
-    def add_rect(self, xp: float = 0, yp: float = 0,
-                 widthp: float = 0, heightp: float = 0,
-                 name: str = "", text: str = "",
-                 text_spacing: int = 1,
-                 x_offsetp: float = 0, y_offsetp: float = 0,
-                 x_offsetp_rev: float = 0, y_offsetp_rev: float = 0) -> None:
+    def add_rect(
+        self,
+        xp: float = 0,
+        yp: float = 0,
+        widthp: float = 0,
+        heightp: float = 0,
+        name: str = "",
+        text: str = "",
+        text_spacing: int = 1,
+        x_offsetp: float = 0,
+        y_offsetp: float = 0,
+        x_offsetp_rev: float = 0,
+        y_offsetp_rev: float = 0,
+    ) -> None:
         """Register a rectangle with rectangle-relative text insets.
 
         x_offsetp/y_offsetp are left/top; their _rev versions are right/bottom.
@@ -106,12 +107,23 @@ class Layout():
         if name == "":
             name = str(len(self._rects))
         self._rects[name] = Rect(
-            name=name, xp=xp, yp=yp, widthp=widthp, heightp=heightp,
-            text=text, text_spacing=text_spacing,
-            x_offsetp=x_offsetp, y_offsetp=y_offsetp,
-            x_offsetp_rev=x_offsetp_rev, y_offsetp_rev=y_offsetp_rev)
+            name=name,
+            xp=xp,
+            yp=yp,
+            widthp=widthp,
+            heightp=heightp,
+            text=text,
+            text_spacing=text_spacing,
+            x_offsetp=x_offsetp,
+            y_offsetp=y_offsetp,
+            x_offsetp_rev=x_offsetp_rev,
+            y_offsetp_rev=y_offsetp_rev,
+        )
 
-    def center_rect_x(self, name: str) -> None:
+    def center_rect_x(
+        self,
+        name: str,
+    ) -> None:
         """Center the named rectangle horizontally in percentage space."""
         rect = self._rects.get(name)
         if rect is None:
@@ -140,7 +152,6 @@ class Layout():
 
         x1 = rect.xp * width / 100
         y1 = rect.yp * height / 100
-
         x2 = (rect.xp + rect.widthp) * width / 100
         y2 = (rect.yp + rect.heightp) * height / 100
 

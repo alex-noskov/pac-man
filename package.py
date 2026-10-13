@@ -10,7 +10,10 @@ GENERATOR_WHEEL = 'mazegenerator-2.1.0-py3-none-any.whl'
 MLX_LICENSE = Path('mlx-2.2/src/mlx_CLXV-2.2/mlx_CLXV/LICENSE')
 
 
-def copy_support_files(root: Path, destination: Path) -> None:
+def copy_support_files(
+    root: Path,
+    destination: Path,
+) -> None:
     """Validate inputs then copy user instructions and unchanged vendors."""
     files = [(root / name, name) for name in
              ('config.json', 'INSTRUCTIONS.txt', GENERATOR_WHEEL)]

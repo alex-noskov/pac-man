@@ -19,8 +19,12 @@ class MazeError(ValueError):
 class Maze:
     """Own a validated row-major grid of N/E/S/W wall bitmasks."""
 
-    def __init__(self, width: int, height: int,
-                 cells: Iterable[Iterable[int]]) -> None:
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        cells: Iterable[Iterable[int]],
+    ) -> None:
         """Validate dimensions, boundaries and reciprocal wall masks."""
         if (type(width) is not int or type(height) is not int
                 or width < 1 or height < 1):
@@ -52,7 +56,12 @@ class Maze:
                         raise MazeError('Maze has non-reciprocal walls')
 
     @classmethod
-    def generate(cls, width: int, height: int, seed: int) -> 'Maze':
+    def generate(
+        cls,
+        width: int,
+        height: int,
+        seed: int,
+    ) -> 'Maze':
         """Call the assigned generator as-is, restoring global RNG state."""
         with _GENERATION_LOCK:
             state = random.getstate()
@@ -98,12 +107,19 @@ class Maze:
                 abs(c[0] - cx) + abs(c[1] - cy), c[1], c[0])))
         return tuple(result)
 
-    def in_bounds(self, cell: Cell) -> bool:
+    def in_bounds(
+        self,
+        cell: Cell,
+    ) -> bool:
         """Return whether a cell is inside the grid."""
         x, y = cell
         return 0 <= x < self.width and 0 <= y < self.height
 
-    def can_move(self, cell: Cell, direction: Directions) -> bool:
+    def can_move(
+        self,
+        cell: Cell,
+        direction: Directions,
+    ) -> bool:
         """Check both sides of a corridor; STOP is never a passage."""
         if direction not in WALLS or not self.in_bounds(cell):
             return False
@@ -114,13 +130,19 @@ class Maze:
         return (self.in_bounds(target) and not self.cells[y][x] & wall
                 and not self.cells[target[1]][target[0]] & opposite)
 
-    def neighbors(self, cell: Cell) -> list[Cell]:
+    def neighbors(
+        self,
+        cell: Cell,
+    ) -> list[Cell]:
         """Return neighboring cells connected by legal corridors."""
         x, y = cell
         return [(x + d.value[0], y + d.value[1]) for d in WALLS
                 if self.can_move(cell, d)]
 
-    def distances(self, start: Cell) -> dict[Cell, int]:
+    def distances(
+        self,
+        start: Cell,
+    ) -> dict[Cell, int]:
         """Compute shortest graph distances with breadth-first search."""
         if not self.in_bounds(start):
             return {}
@@ -134,6 +156,9 @@ class Maze:
                     queue.append(neighbor)
         return distances
 
-    def reachable(self, start: Cell) -> set[Cell]:
+    def reachable(
+        self,
+        start: Cell,
+    ) -> set[Cell]:
         """Return the connected component containing start."""
         return set(self.distances(start))

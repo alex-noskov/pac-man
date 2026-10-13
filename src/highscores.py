@@ -17,7 +17,10 @@ class HighscoreEntry(TypedDict):
 class HighscoreStore:
     """Maintain ranked entries, exposing recoverable errors to the UI."""
 
-    def __init__(self, path: Path | str) -> None:
+    def __init__(
+        self,
+        path: Path | str,
+    ) -> None:
         """Set the storage path without performing implicit disk writes."""
         self.path = Path(path)
         self.entries: list[HighscoreEntry] = []
@@ -45,7 +48,10 @@ class HighscoreStore:
             self.error = f'Could not load highscores: {error}'
 
     @staticmethod
-    def _validate(name: object, score: object) -> HighscoreEntry | None:
+    def _validate(
+        name: object,
+        score: object,
+    ) -> HighscoreEntry | None:
         """Return a clean entry only when both values meet the subject."""
         if (not isinstance(name, str) or not name.strip()
                 or re.fullmatch(r'[A-Za-z0-9 ]{1,10}', name) is None):
@@ -59,7 +65,11 @@ class HighscoreStore:
         self.entries.sort(key=lambda entry: entry['score'], reverse=True)
         self.entries = self.entries[:10]
 
-    def add(self, name: str, score: int) -> bool:
+    def add(
+        self,
+        name: str,
+        score: int,
+    ) -> bool:
         """Insert a score and retain the top ten in descending order."""
         self.error = ''
         entry = self._validate(name, score)

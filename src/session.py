@@ -38,7 +38,10 @@ class Ghost(Actor):
 class GameSession:
     """Own a complete headless game with explicit application states."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(
+        self,
+        config: Config,
+    ) -> None:
         """Start a new game using validated configuration."""
         self.config = config
         self.maze: Maze | None = None
@@ -107,7 +110,10 @@ class GameSession:
             self.error = str(exc)
             self.state = AppState.ERROR
 
-    def set_direction(self, direction: Directions) -> None:
+    def set_direction(
+        self,
+        direction: Directions,
+    ) -> None:
         """Queue a turn, executed only when the next cell center permits it."""
         if self.state == AppState.GAME and isinstance(direction, Directions):
             self.player.desired_direction = direction
@@ -125,7 +131,11 @@ class GameSession:
         return (abs(actor.x - round(actor.x)) < 1e-9
                 and abs(actor.y - round(actor.y)) < 1e-9)
 
-    def _move(self, actor: Actor, distance: float) -> None:
+    def _move(
+        self,
+        actor: Actor,
+        distance: float,
+    ) -> None:
         """Advance continuously; turns and wall checks happen at centers."""
         maze = self.maze
         if maze is None:
@@ -166,7 +176,10 @@ class GameSession:
                     if self.state != AppState.GAME:
                         return
 
-    def _choose_ghost_direction(self, ghost: Ghost) -> None:
+    def _choose_ghost_direction(
+        self,
+        ghost: Ghost,
+    ) -> None:
         """Choose a nearby corridor toward or away from the player."""
         maze = self.maze
         if maze is None:
@@ -201,8 +214,12 @@ class GameSession:
         ghost.desired_direction = Directions((dx, dy))
 
     @staticmethod
-    def _swept_touch(player_start: tuple[float, float], player: Actor,
-                     ghost_start: tuple[float, float], ghost: Ghost) -> bool:
+    def _swept_touch(
+        player_start: tuple[float, float],
+        player: Actor,
+        ghost_start: tuple[float, float],
+        ghost: Ghost,
+    ) -> bool:
         """Detect closest approach of simultaneous motion, including swaps."""
         relative_x = player_start[0] - ghost_start[0]
         relative_y = player_start[1] - ghost_start[1]
@@ -224,8 +241,11 @@ class GameSession:
         return ((relative_x + closest_time * relative_move_x)**2
                 + (relative_y + closest_time * relative_move_y)**2 <= 0.35**2)
 
-    def _collisions(self, player_start: tuple[float, float],
-                    ghost_starts: list[tuple[float, float]]) -> bool:
+    def _collisions(
+        self,
+        player_start: tuple[float, float],
+        ghost_starts: list[tuple[float, float]],
+    ) -> bool:
         """Resolve ghosts once; return True immediately after one death."""
         for ghost, start in zip(self.ghosts, ghost_starts):
             if ghost.respawn_remaining > 0:
@@ -281,7 +301,10 @@ class GameSession:
         if not self.pellets and not self.power_pellets:
             self.state = AppState.LEVEL_COMPLETE
 
-    def update(self, dt: float) -> None:
+    def update(
+        self,
+        dt: float,
+    ) -> None:
         """Advance active gameplay using small continuous-time steps."""
         if (self.state != AppState.GAME or self.maze is None
                 or not math.isfinite(dt) or dt <= 0):
@@ -333,7 +356,10 @@ class GameSession:
             if died:
                 break
 
-    def cheat(self, action: str) -> None:
+    def cheat(
+        self,
+        action: str,
+    ) -> None:
         """Apply evaluator aids only during active gameplay and cheat mode."""
         if (not self.cheat_enabled
                 or self.state not in (AppState.GAME, AppState.PAUSE)):

@@ -3,9 +3,9 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock
 
-from src.events import EventFactory
+from src.ui.events import EventFactory
 from src.models import AppState
-from src.screens import MainMenuScreen
+from src.ui.screen_main_menu import MainMenuScreen
 
 
 class MenuNavigationTests(unittest.TestCase):
