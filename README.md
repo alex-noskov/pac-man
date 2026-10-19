@@ -193,21 +193,9 @@ This separation keeps gameplay testable without opening a graphical window.
 
 ## Project Management
 
-Development was organized as two consecutive stages with a handoff between team
-members:
-
-- **vpolikha** completed: the initial application/screen and MLX
-  architecture, input/event flow, menus, maze rendering, early Pac-Man movement,
-  pacgum collection, level switching, and HUD foundation.
-- **anoskov** completed: final gameplay integration and refactoring,
-  ghosts and collisions, timers/pause/power behavior, highscores, robust error
-  handling, regression tests, packaging, final documentation, and submission
-  preparation.
-
-Detailed milestones, bugs, design choices, risks, acceptance evidence, and review
-records are stored in [`project_management/`](project_management/README.md).
-[`EVALUATION_GUIDE.md`](EVALUATION_GUIDE.md) contains a compact module-by-module
-walkthrough for peer evaluation.
+Project planning, progress, design decisions, risks, team responsibilities,
+bug tracking, and acceptance testing are documented in
+[`project_management/`](project_management/README.md).
 
 ## Packaging
 

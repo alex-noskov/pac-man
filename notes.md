@@ -1,1 +1,0 @@
-oh ok so i implement my analogue of pygame event buffer with mlx, now  igot it. And also app_loop doesn't run eternalyly, it is just called on each iteration. nice!
