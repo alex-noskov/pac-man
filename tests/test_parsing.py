@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from src.parsing import Config, parse_conf
+from src.parsing import Config, parse
 
 
 class ParsingTests(unittest.TestCase):
@@ -27,7 +27,7 @@ class ParsingTests(unittest.TestCase):
             path.write_text(text, encoding="utf-8")
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
-                config = parse_conf(path)
+                config = parse(path)
             return config, output.getvalue()
 
     def test_missing_keys_report_defaults(self) -> None:
@@ -94,13 +94,13 @@ class ParsingTests(unittest.TestCase):
             path = Path(directory) / 'broken.json'
             path.write_bytes(b'\xff')
             with contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(parse_conf(path), Config())
+                self.assertEqual(parse(path), Config())
                 self.assertEqual(
-                    parse_conf(path.parent / 'missing.json'),
+                    parse(path.parent / 'missing.json'),
                     Config()
                 )
-                self.assertEqual(parse_conf(path.parent), Config())
-                self.assertEqual(parse_conf(path.parent / 'bad.txt'), Config())
+                self.assertEqual(parse(path.parent), Config())
+                self.assertEqual(parse(path.parent / 'bad.txt'), Config())
 
     def test_large_pacgum_count_clamped(self) -> None:
         """Counts cannot exceed the maximum possible maze cell count."""

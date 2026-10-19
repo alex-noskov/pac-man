@@ -88,8 +88,12 @@ class HighscoreStore:
         try:
             payload = json.dumps(self.entries, indent=2) + '\n'
             with tempfile.NamedTemporaryFile(
-                mode='w', encoding='utf-8', dir=self.path.parent,
-                prefix=f'.{self.path.name}.', suffix='.tmp', delete=False,
+                mode='w',
+                encoding='utf-8',
+                dir=self.path.parent,
+                prefix=f'.{self.path.name}.',
+                suffix='.tmp',
+                delete=False,
             ) as file:
                 temporary = Path(file.name)
                 file.write(payload)

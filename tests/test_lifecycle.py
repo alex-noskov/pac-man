@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 from src.ui.events import EventFactory
 from src.models import AppState
 from src.app import App
-from src.parsing import Config, parse_conf
+from src.parsing import Config, parse
 
 
 class LifecycleTests(unittest.TestCase):
@@ -83,7 +83,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_supplied_config_preserves_zero_based_level_labels(self) -> None:
         """The checked-in configuration must not discard valid custom mazes."""
-        config = parse_conf(Path('config.json'))
+        config = parse(Path('config.json'))
         self.assertEqual(len(config.levels), 10)
         self.assertEqual(config.levels[0].width, 14)
         self.assertEqual(config.levels[1].width, 19)

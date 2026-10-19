@@ -1,6 +1,6 @@
 from ..highscores import HighscoreStore
 from ..models import AppState
-from .colors import (
+from .layout import (
     BLACK,
     BLUE,
     NORMAL_TEXT_SCALE,

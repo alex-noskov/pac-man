@@ -3,7 +3,7 @@ import unittest
 
 from src.maze import Maze
 from src.models import Directions
-from src.parsing import Config, parse_conf
+from src.parsing import Config, parse
 from src.session import GameSession, Ghost
 
 
@@ -13,7 +13,7 @@ class SimpleGhostTests(unittest.TestCase):
     def test_shipped_and_default_ghost_speed_is_two_cells_per_second(
             self) -> None:
         """One obvious config key sets a visibly slower common ghost speed."""
-        for config in (Config(), parse_conf('config.json')):
+        for config in (Config(), parse('config.json')):
             self.assertEqual(config.ghost_speed, 2.0)
 
     def test_chase_chooses_local_distance_not_a_shortest_path(self) -> None:

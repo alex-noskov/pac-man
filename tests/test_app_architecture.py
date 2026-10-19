@@ -8,6 +8,11 @@ from src.models import AppState
 from src.app import App
 from src.parsing import Config
 
+TimelineEntry = (
+    tuple[str, str]
+    | tuple[str, str, object]
+)
+
 
 class RecordingScreen:
     """Small screen double that records orchestration calls."""
@@ -15,7 +20,7 @@ class RecordingScreen:
     def __init__(
         self,
         name: str,
-        timeline: list[tuple],
+        timeline: list[TimelineEntry],
         *,
         event_states: list[AppState] | None = None,
         update_state: AppState,
@@ -129,7 +134,7 @@ class AppLoopTests(unittest.TestCase):
         return app
 
     def test_new_screen_handles_events_after_transition(self) -> None:
-        timeline: list[tuple] = []
+        timeline: list[TimelineEntry] = []
         first_event = EventFactory.key_enter()
         second_event = EventFactory.key_right()
         menu = RecordingScreen(
@@ -166,7 +171,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.state, AppState.GAME)
 
     def test_update_transition_changes_which_screen_is_rendered(self) -> None:
-        timeline: list[tuple] = []
+        timeline: list[TimelineEntry] = []
         game = RecordingScreen(
             "game",
             timeline,
@@ -200,7 +205,7 @@ class AppLoopTests(unittest.TestCase):
         self.assertEqual(app.state, AppState.LEVEL_COMPLETE)
 
     def test_exit_event_stops_loop_before_update_or_render(self) -> None:
-        timeline: list[tuple] = []
+        timeline: list[TimelineEntry] = []
         close_event = EventFactory.close()
         menu = RecordingScreen(
             "menu",
@@ -243,7 +248,7 @@ class AppLoopTests(unittest.TestCase):
 
     def test_render_requested_transition_is_applied(self) -> None:
         """Apply transitions consistently, including render results."""
-        timeline: list[tuple] = []
+        timeline: list[TimelineEntry] = []
         menu = RecordingScreen(
             "menu",
             timeline,

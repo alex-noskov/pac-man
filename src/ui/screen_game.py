@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable
 
 from ..models import AppState, Directions
 from ..parsing import Config
-from .colors import (
+from .layout import (
     BLACK,
     BLUE,
     HUD_TEXT_SCALE,
@@ -14,7 +14,21 @@ from .colors import (
     TITLE_TEXT_SCALE,
     WHITE,
     YELLOW,
+    LIGHT_RED,
+    GRAY,
+    LIGHT_PINK,
+    CYAN,
+    LIGHT_ORANGE,
+    LIGHT_GREEN,
+    GOLD,
+    GREEN,
+    DARK_ORANGE,
+    GAME_BACKGROUND,
+    PAUSE_BACKGROUND,
+    WALLS_COLOR,
+    COLOR_42,
 )
+
 from .events import Event, EventType
 from .graphics import Graphics
 from .screen_base import Screen
@@ -165,10 +179,11 @@ class GameScreen(Screen):
 
         width, height = g.get_window_size()
         maze_height = height - HUD_HEIGHT - 2 * MAZE_MARGIN
+        maze_width = width - 2 * MAZE_MARGIN
         cell = max(
             1,
             min(
-                (width - 2 * MAZE_MARGIN) // maze.width,
+                maze_width // maze.width,
                 maze_height // maze.height,
             ),
         )
@@ -182,7 +197,7 @@ class GameScreen(Screen):
         if self._maze_cached is not maze:
             g.create_layer('maze')
             g.create_layer('actors')
-            g.fill(BLACK, layer='maze')
+            g.fill(GAME_BACKGROUND, layer='maze')
             thickness = max(1, cell // 10)
             for y, row in enumerate(maze.cells):
                 for x, walls in enumerate(row):
@@ -194,7 +209,7 @@ class GameScreen(Screen):
                             py,
                             cell,
                             cell,
-                            BLUE,
+                            COLOR_42,
                             layer='maze',
                         )
                         continue
@@ -210,7 +225,7 @@ class GameScreen(Screen):
                                 py + dy,
                                 wall_width,
                                 wall_height,
-                                BLUE,
+                                WALLS_COLOR,
                                 layer='maze',
                             )
             self._maze_cached = maze
@@ -233,7 +248,12 @@ class GameScreen(Screen):
         sprites = [(s.player, YELLOW)]
         for ghost, color in zip(
             s.ghosts,
-            (0xFFFF4444, 0xFFFF99CC, 0xFF44FFFF, 0xFFFFAA44),
+            (
+                LIGHT_RED,
+                LIGHT_PINK,
+                CYAN,
+                LIGHT_ORANGE,
+            ),
         ):
             if ghost.respawn_remaining <= 0:
                 sprites.append(
@@ -251,38 +271,76 @@ class GameScreen(Screen):
                 layer='actors',
             )
 
-        hud = (
-            f'SCORE {s.score}   LIVES {s.lives}   '
-            f'LEVEL {s.level_index + 1}   '
-            f'TIME {math.ceil(s.time_remaining)}'
-        )
         scale = HUD_TEXT_SCALE
-        g.draw_text(
-            hud,
-            10,
-            12,
-            WHITE,
-            scale=scale,
-            spacing=scale,
-            layer='actors',
+        spacing = scale
+        x = left
+        y = 24
+
+        hud_parts = (
+            ('SCORE: ', GOLD),
+            (str(s.score), YELLOW),
+            ('  LIVES: ', LIGHT_GREEN),
+            (str(s.lives), GREEN),
+            ('  LEVEL: ', LIGHT_PINK),
+            (str(s.level_index + 1), PINK),
+            ('  TIME: ', LIGHT_ORANGE),
+            (str(math.ceil(s.time_remaining)), DARK_ORANGE),
         )
 
-        status = 'ESC/P PAUSE   C CHEATS'
-        if s.cheat_enabled:
-            status = (
-                f'CHEATS I:{int(s.invincible)} '
-                f'F:{int(s.ghosts_frozen)} '
-                'N:SKIP L:LIFE B:SPEED V:POWER'
+        for text, color in hud_parts:
+            g.draw_text(
+                text,
+                x,
+                y,
+                color,
+                scale=scale,
+                spacing=spacing,
+                layer='actors',
             )
-        g.draw_text(
-            status,
-            10,
-            48,
-            YELLOW,
-            scale=HUD_TEXT_SCALE,
-            spacing=HUD_TEXT_SCALE,
-            layer='actors',
-        )
+            x += len(text) * (5 * scale + spacing)
+
+        x = left
+        y = 60
+        status_parts: tuple[tuple[str, int], ...]
+        if s.cheat_enabled:
+            status_parts = (
+                ('CHEATS ', WHITE),
+                ('I: ', WHITE),
+                (str(int(s.invincible)), LIGHT_GREEN),
+                ('  F: ', WHITE),
+                (str(int(s.ghosts_frozen)), LIGHT_GREEN),
+                ('  N: ', WHITE),
+                ('SKIP', YELLOW),
+                ('  L: ', WHITE),
+                ('LIFE', LIGHT_GREEN),
+                ('  B: ', WHITE),
+                ('SPEED', CYAN),
+                ('  V: ', WHITE),
+                ('POWER', BLUE),
+            )
+        else:
+            status_parts = (
+                ('ESC/P: ', LIGHT_ORANGE),
+                ('PAUSE', GRAY),
+                ('   C: ', YELLOW),
+                ('CHEATS', GRAY),
+            )
+
+        for text, color in status_parts:
+            g.draw_text(
+                text,
+                x,
+                y,
+                color,
+                scale=scale,
+                spacing=scale,
+                layer='actors',
+            )
+
+            x += (
+                len(text) * 5 * scale
+                + max(0, len(text) - 1) * scale
+            )
 
         if s.state == AppState.PAUSE:
             g.draw_rectangle(
@@ -290,7 +348,7 @@ class GameScreen(Screen):
                 height // 3,
                 width // 2,
                 height // 3,
-                BLACK,
+                PAUSE_BACKGROUND,
                 layer='actors',
             )
             for index, label in enumerate(('RESUME', 'MAIN MENU')):

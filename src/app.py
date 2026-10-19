@@ -102,7 +102,7 @@ class App:
         next_state = self.screen.render()
         if next_state != self.state:
             self._transition_to(next_state)
-        if self.state == AppState.EXIT:
+        if next_state == AppState.EXIT:
             self.graphics.stop_loop()
 
     def _transition_to(

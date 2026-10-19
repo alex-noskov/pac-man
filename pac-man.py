@@ -3,7 +3,7 @@
 import sys
 
 from src.models import AppState
-from src.parsing import parse_conf
+from src.parsing import parse
 
 
 def main() -> None:
@@ -17,7 +17,7 @@ def main() -> None:
     try:
         from src.app import App
 
-        config = parse_conf(sys.argv[1])
+        config = parse(sys.argv[1])
         app = App(config, AppState.MAIN_MENU)
         app.start()
     except (ImportError, OSError, RuntimeError, ValueError) as error:

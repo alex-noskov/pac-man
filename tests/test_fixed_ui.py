@@ -3,11 +3,15 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock
 
-from src.ui import colors as ui
-from src.ui.colors import BLACK
 from src.highscores import HighscoreStore
 from src.models import AppState
-from src.parsing import Config, parse_conf
+from src.parsing import Config, parse
+from src.ui.layout import (
+    BLACK,
+    HUD_TEXT_SCALE,
+    NORMAL_TEXT_SCALE,
+    TITLE_TEXT_SCALE,
+)
 from src.ui.screen_end import EndScreen
 from src.ui.screen_game import GameScreen
 from src.ui.screen_highscores import HighscoresScreen
@@ -30,16 +34,18 @@ class FixedUiTests(unittest.TestCase):
         self.assertEqual(title.kwargs['color'], BLACK)
 
     def test_default_and_supplied_window_fit_a_laptop(self) -> None:
-        """The shipped and fallback windows use the same modest dimensions."""
-        for config in (Config(), parse_conf('config.json')):
-            self.assertEqual((config.window_width, config.window_height),
-                             (1024, 640))
+        """The shipped and fallback windows use the same dimensions."""
+        for config in (Config(), parse('config.json')):
+            self.assertEqual(
+                (config.window_width, config.window_height),
+                (1280, 800),
+            )
 
     def test_named_font_constants_have_fixed_sizes(self) -> None:
         """Font magnification is explicit and easy to adjust for evaluation."""
-        for name, value in (('NORMAL_TEXT_SCALE', 2),
-                            ('TITLE_TEXT_SCALE', 3), ('HUD_TEXT_SCALE', 2)):
-            self.assertEqual(getattr(ui, name, None), value)
+        self.assertEqual(NORMAL_TEXT_SCALE, 2)
+        self.assertEqual(TITLE_TEXT_SCALE, 3)
+        self.assertEqual(HUD_TEXT_SCALE, 2)
 
     def test_all_screens_keep_text_and_elements_inside_laptop_window(
             self) -> None:

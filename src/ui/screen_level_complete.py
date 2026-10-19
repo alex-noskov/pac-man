@@ -1,5 +1,5 @@
 from ..models import AppState
-from .colors import BLACK, TITLE_TEXT_SCALE, YELLOW
+from .layout import BLACK, TITLE_TEXT_SCALE, YELLOW
 from .events import Event, EventType
 from .graphics import Graphics
 from .layout import AbsoluteRect, Layout

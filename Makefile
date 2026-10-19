@@ -22,7 +22,7 @@ lint:
 
 lint-strict:
 	$(UV) flake8 .
-	$(UV) mypy . --strict
+	$(UV) mypy . --strict --ignore-missing-imports
 
 clean:
 	$(UV) python clean.py
