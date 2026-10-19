@@ -7,6 +7,7 @@ from src.parsing import parse
 
 
 def main() -> None:
+    """Validate command-line arguments and start the Pac-Man application."""
     if len(sys.argv) != 2:
         print(
             "Usage: python3 pac-man.py <config.json>",
