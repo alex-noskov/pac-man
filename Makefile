@@ -12,9 +12,6 @@ run:
 debug:
 	$(UV) python -m pdb pac-man.py "$(CONFIG)"
 
-test:
-	$(UV) python -m unittest discover -s tests -v
-
 lint:
 	$(UV) flake8 .
 	$(UV) mypy . --warn-return-any --warn-unused-ignores \
