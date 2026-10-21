@@ -33,7 +33,7 @@ class InstructionsScreen(Screen):
         self._instructions = [
             "USE ARROW KEYS / WASD TO MOVE",
             "EAT DOTS TO SCORE POINTS",
-            "EAT ALL DOTS TO COMPLETE THE LEVEL",
+            "EAT ALL NORMAL DOTS TO COMPLETE THE LEVEL",
             "AVOID THE GHOSTS",
             "TOUCHING A GHOST COSTS ONE LIFE",
             "YOU START WITH A LIMITED NUMBER OF LIVES",
@@ -43,7 +43,7 @@ class InstructionsScreen(Screen):
             "C TOGGLES EVALUATION CHEATS",
             "CHEATS I INVINCIBLE N SKIP F FREEZE",
             "CHEATS L LIFE B SPEED V POWER",
-            "CLEAR THE MAZE TO ADVANCE",
+            "CLEAR ALL NORMAL DOTS TO ADVANCE",
             "LOSE ALL LIVES AND THE GAME IS OVER",
             "CLEAR ALL 10 LEVELS TO WIN",
         ]
