@@ -27,7 +27,11 @@ from .layout import (
     PAUSE_BACKGROUND,
     WALLS_COLOR,
     COLOR_42,
+    fit_text_scale,
+    responsive_px,
     responsive_scale,
+    text_box_layout,
+    text_pixel_width,
 )
 
 from .events import Event, EventType
@@ -145,22 +149,76 @@ class GameScreen(Screen):
         color: int = WHITE,
         scale: int = NORMAL_TEXT_SCALE,
     ) -> None:
-        """Draw centered text using a fixed font size."""
+        """Draw centered responsive text inside a padded screen box."""
         width, height = self.graphics.get_window_size()
-        scale = responsive_scale(width, height, scale)
-        spacing = scale
-        text_width = (
-            len(text) * 5 * scale
-            + max(0, len(text) - 1) * spacing
+        box_x = responsive_px(width, height, 24)
+        box_y = responsive_px(width, height, y)
+        box_width = max(1, width - 2 * box_x)
+        box_height = responsive_px(
+            width,
+            height,
+            52 if scale == TITLE_TEXT_SCALE else 36,
+        )
+        padding_x = responsive_px(width, height, 8)
+        padding_y = responsive_px(width, height, 4)
+        text_x, text_y, actual_scale, spacing = text_box_layout(
+            text.upper(),
+            box_x,
+            box_y,
+            box_width,
+            box_height,
+            responsive_scale(width, height, scale),
+            padding_x,
+            padding_y,
         )
         self.graphics.draw_text(
             text.upper(),
-            max(8, (width - text_width) // 2),
-            y,
+            text_x,
+            text_y,
             color,
-            scale=scale,
+            scale=actual_scale,
             spacing=spacing,
         )
+
+    def _colored_row(
+        self,
+        parts: tuple[tuple[str, int], ...],
+        box_x: int,
+        box_y: int,
+        box_width: int,
+        box_height: int,
+        preferred_scale: int,
+        padding_x: int,
+        padding_y: int,
+    ) -> None:
+        """Draw colored text parts as one centered fitted row."""
+        full_text = ''.join(text for text, _ in parts)
+        scale = fit_text_scale(
+            full_text,
+            box_width,
+            box_height,
+            preferred_scale,
+            padding_x,
+            padding_y,
+        )
+        spacing = scale
+        full_width = text_pixel_width(full_text, scale, spacing)
+        x = box_x + (box_width - full_width) // 2
+        y = box_y + (box_height - 8 * scale) // 2
+
+        for index, (text, color) in enumerate(parts):
+            self.graphics.draw_text(
+                text,
+                x,
+                y,
+                color,
+                scale=scale,
+                spacing=spacing,
+                layer='actors',
+            )
+            x += text_pixel_width(text, scale, spacing)
+            if index < len(parts) - 1:
+                x += spacing
 
     def render(self) -> AppState:
         """Cache the maze and draw pellets, sprites, HUD, and pause overlay."""
@@ -185,8 +243,18 @@ class GameScreen(Screen):
             return AppState.ERROR
 
         width, height = g.get_window_size()
-        maze_height = height - HUD_HEIGHT - 2 * MAZE_MARGIN
-        maze_width = width - 2 * MAZE_MARGIN
+        hud_height = responsive_px(
+            width,
+            height,
+            HUD_HEIGHT,
+        )
+        maze_margin = responsive_px(
+            width,
+            height,
+            MAZE_MARGIN,
+        )
+        maze_height = height - hud_height - 2 * maze_margin
+        maze_width = width - 2 * maze_margin
         cell = max(
             1,
             min(
@@ -196,8 +264,8 @@ class GameScreen(Screen):
         )
         left = (width - cell * maze.width) // 2
         top = (
-            HUD_HEIGHT
-            + MAZE_MARGIN
+            hud_height
+            + maze_margin
             + (maze_height - cell * maze.height) // 2
         )
 
@@ -278,15 +346,6 @@ class GameScreen(Screen):
                 layer='actors',
             )
 
-        scale = responsive_scale(
-            width,
-            height,
-            HUD_TEXT_SCALE,
-        )
-        spacing = scale
-        x = left
-        y = 24
-
         hud_parts = (
             ('SCORE: ', GOLD),
             (str(s.score), YELLOW),
@@ -298,20 +357,6 @@ class GameScreen(Screen):
             (str(math.ceil(s.time_remaining)), DARK_ORANGE),
         )
 
-        for text, color in hud_parts:
-            g.draw_text(
-                text,
-                x,
-                y,
-                color,
-                scale=scale,
-                spacing=spacing,
-                layer='actors',
-            )
-            x += len(text) * (5 * scale + spacing)
-
-        x = left
-        y = 60
         status_parts: tuple[tuple[str, int], ...]
         if s.cheat_enabled:
             status_parts = (
@@ -337,28 +382,48 @@ class GameScreen(Screen):
                 ('CHEATS', GRAY),
             )
 
-        for text, color in status_parts:
-            g.draw_text(
-                text,
-                x,
-                y,
-                color,
-                scale=scale,
-                spacing=scale,
-                layer='actors',
-            )
-
-            x += (
-                len(text) * 5 * scale
-                + max(0, len(text) - 1) * scale
-            )
+        hud_x = maze_margin
+        hud_width = max(1, width - 2 * maze_margin)
+        first_row_height = max(1, hud_height // 2)
+        second_row_height = max(1, hud_height - first_row_height)
+        hud_padding_x = responsive_px(width, height, 8)
+        hud_padding_y = responsive_px(width, height, 2)
+        preferred_hud_scale = responsive_scale(
+            width,
+            height,
+            HUD_TEXT_SCALE,
+        )
+        self._colored_row(
+            hud_parts,
+            hud_x,
+            0,
+            hud_width,
+            first_row_height,
+            preferred_hud_scale,
+            hud_padding_x,
+            hud_padding_y,
+        )
+        self._colored_row(
+            status_parts,
+            hud_x,
+            first_row_height,
+            hud_width,
+            second_row_height,
+            preferred_hud_scale,
+            hud_padding_x,
+            hud_padding_y,
+        )
 
         if s.state == AppState.PAUSE:
+            pause_x = width // 4
+            pause_y = height // 3
+            pause_width = width // 2
+            pause_height = height // 3
             g.draw_rectangle(
-                width // 4,
-                height // 3,
-                width // 2,
-                height // 3,
+                pause_x,
+                pause_y,
+                pause_width,
+                pause_height,
                 PAUSE_BACKGROUND,
                 layer='actors',
             )
@@ -367,14 +432,39 @@ class GameScreen(Screen):
                 height,
                 NORMAL_TEXT_SCALE,
             )
+            pause_padding_x = responsive_px(width, height, 24)
+            pause_padding_y = responsive_px(width, height, 12)
+            inner_y = pause_y + pause_padding_y
+            inner_height = max(
+                1,
+                pause_height - 2 * pause_padding_y,
+            )
+            row_height = max(1, inner_height // 2)
+
             for index, label in enumerate(('RESUME', 'MAIN MENU')):
+                text = (
+                    ('> ' if index == self._pause_selected else '  ')
+                    + label
+                )
+                text_x, text_y, actual_scale, spacing = (
+                    text_box_layout(
+                        text,
+                        pause_x,
+                        inner_y + index * row_height,
+                        pause_width,
+                        row_height,
+                        pause_scale,
+                        pause_padding_x,
+                        responsive_px(width, height, 4),
+                    )
+                )
                 g.draw_text(
-                    ('> ' if index == self._pause_selected else '  ') + label,
-                    width // 3,
-                    height // 3 + 40 + index * 40,
+                    text,
+                    text_x,
+                    text_y,
                     YELLOW,
-                    scale=pause_scale,
-                    spacing=pause_scale,
+                    scale=actual_scale,
+                    spacing=spacing,
                     layer='actors',
                 )
 

@@ -6,7 +6,9 @@ from .layout import (
     TITLE_TEXT_SCALE,
     WHITE,
     YELLOW,
+    responsive_px,
     responsive_scale,
+    text_box_layout,
 )
 from .events import Event, EventType
 from .graphics import Graphics
@@ -71,41 +73,69 @@ class HighscoresScreen(Screen):
             f"{index + 1:2} {entry['name'].upper():10} {entry['score']}"
             for index, entry in enumerate(entries)
         ] or ['NO HIGHSCORES YET']
+        row_x = self._width // 10
+        row_width = self._width * 8 // 10
+        row_height = self._height // 18
+        row_padding_x = responsive_px(
+            self._width,
+            self._height,
+            12,
+        )
+        row_padding_y = responsive_px(
+            self._width,
+            self._height,
+            3,
+        )
+        preferred_scale = responsive_scale(
+            self._width,
+            self._height,
+            NORMAL_TEXT_SCALE,
+        )
+
         for index, text in enumerate(rows):
-            scale = responsive_scale(
-                self._width,
-                self._height,
-                NORMAL_TEXT_SCALE,
-            )
-            spacing = scale
-            text_width = (
-                len(text) * 5 * scale
-                + max(0, len(text) - 1) * spacing
+            row_y = self._height // 4 + index * row_height
+            text_x, text_y, scale, spacing = text_box_layout(
+                text,
+                row_x,
+                row_y,
+                row_width,
+                row_height,
+                preferred_scale,
+                row_padding_x,
+                row_padding_y,
             )
             self.graphics.draw_text(
                 text,
-                max(10, (self._width - text_width) // 2),
-                self._height // 4 + index * self._height // 18,
+                text_x,
+                text_y,
                 WHITE,
                 scale=scale,
                 spacing=spacing,
             )
+
         if self.store is not None and self.store.error:
+            error = 'HIGHSCORE FILE ERROR - SEE CONSOLE'
+            error_x = self._width // 20
+            error_y = self._height * 86 // 100
+            error_width = self._width * 9 // 10
+            error_height = self._height * 6 // 100
+            text_x, text_y, scale, spacing = text_box_layout(
+                error,
+                error_x,
+                error_y,
+                error_width,
+                error_height,
+                preferred_scale,
+                row_padding_x,
+                row_padding_y,
+            )
             self.graphics.draw_text(
-                'HIGHSCORE FILE ERROR - SEE CONSOLE',
-                10,
-                self._height * 9 // 10,
+                error,
+                text_x,
+                text_y,
                 YELLOW,
-                scale=responsive_scale(
-                    self._width,
-                    self._height,
-                    NORMAL_TEXT_SCALE,
-                ),
-                spacing=responsive_scale(
-                    self._width,
-                    self._height,
-                    NORMAL_TEXT_SCALE,
-                ),
+                scale=scale,
+                spacing=spacing,
             )
         self.graphics.refresh()
         return self._self_app_state
@@ -120,17 +150,25 @@ class HighscoresScreen(Screen):
             heightp=5,
             name="TITLE",
             text="HIGHSCORES",
+            x_offsetp=4,
+            y_offsetp=10,
+            x_offsetp_rev=4,
+            y_offsetp_rev=10,
         )
         self.layout.center_rect_x("TITLE")
 
         # Return hint near the bottom of the window.
         self.layout.add_rect(
             xp=0,
-            yp=95,
+            yp=94,
             widthp=100,
-            heightp=2,
+            heightp=4,
             name="BACK_INFO",
             text="press esc to go back to main menu",
+            x_offsetp=4,
+            y_offsetp=10,
+            x_offsetp_rev=4,
+            y_offsetp_rev=10,
         )
         self.layout.center_rect_x("BACK_INFO")
 
@@ -144,7 +182,11 @@ class HighscoresScreen(Screen):
                     TITLE_TEXT_SCALE,
                 )
                 if name == 'TITLE'
-                else NORMAL_TEXT_SCALE
+                else responsive_scale(
+                    self._width,
+                    self._height,
+                    NORMAL_TEXT_SCALE,
+                )
             )
             abs_rect = self.layout.get_rect_absolute(
                 name,

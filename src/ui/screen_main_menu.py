@@ -8,7 +8,9 @@ from .layout import (
     PURPLE,
     WHITE,
     YELLOW,
+    responsive_px,
     responsive_scale,
+    text_box_layout,
 )
 from .events import Event, EventType
 from .graphics import Graphics
@@ -133,22 +135,39 @@ class MainMenuScreen(Screen):
         if self.store is not None and self.store.entries:
             best = self.store.entries[0]
             text = f"BEST {best['name'].upper()} {best['score']}"
-            scale = responsive_scale(
+            box_x = self._width // 10
+            box_y = self._height * 4 // 100
+            box_width = self._width * 8 // 10
+            box_height = self._height * 8 // 100
+            padding_x = responsive_px(
                 self._width,
                 self._height,
-                NORMAL_TEXT_SCALE,
+                12,
             )
-            spacing = scale
-
-            text_width = (
-                len(text) * 5 * scale
-                + max(0, len(text) - 1) * spacing
+            padding_y = responsive_px(
+                self._width,
+                self._height,
+                4,
+            )
+            text_x, text_y, scale, spacing = text_box_layout(
+                text,
+                box_x,
+                box_y,
+                box_width,
+                box_height,
+                responsive_scale(
+                    self._width,
+                    self._height,
+                    NORMAL_TEXT_SCALE,
+                ),
+                padding_x,
+                padding_y,
             )
 
             self.graphics.draw_text(
                 text,
-                max(10, (self._width - text_width) // 2),
-                self._height // 12,
+                text_x,
+                text_y,
                 WHITE,
                 scale=scale,
                 spacing=spacing,
@@ -185,16 +204,22 @@ class MainMenuScreen(Screen):
                 name=name,
                 text=label,
                 x_offsetp=5,
+                y_offsetp=15,
                 x_offsetp_rev=5,
+                y_offsetp_rev=15,
             )
             self.layout.center_rect_x(name)
         self.layout.add_rect(
             xp=0,
-            yp=95,
+            yp=94,
             widthp=100,
-            heightp=2,
+            heightp=4,
             name="CONTROL_INFO",
             text="use arrow up and down to move",
+            x_offsetp=4,
+            y_offsetp=10,
+            x_offsetp_rev=4,
+            y_offsetp_rev=10,
         )
         self.layout.center_rect_x("CONTROL_INFO")
 
@@ -223,7 +248,11 @@ class MainMenuScreen(Screen):
             "CONTROL_INFO",
             self._width,
             self._height,
-            NORMAL_TEXT_SCALE,
+            responsive_scale(
+                self._width,
+                self._height,
+                NORMAL_TEXT_SCALE,
+            ),
         )
         if abs_control_info is not None:
             abs_control_info.color = BLACK

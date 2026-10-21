@@ -13,7 +13,9 @@ from .layout import (
     TITLE_TEXT_SCALE,
     YELLOW,
     AUTO_CONTINUE_DELAY,
+    responsive_px,
     responsive_scale,
+    text_box_layout,
 )
 from .screen_base import Screen
 
@@ -98,22 +100,39 @@ class LevelCompleteScreen(Screen):
 
         hint = f"NEXT LEVEL IN {remaining} - ENTER TO CONTINUE"
 
-        scale = responsive_scale(
+        hint_x = self._width // 10
+        hint_y = self._height * 61 // 100
+        hint_width = self._width * 8 // 10
+        hint_height = self._height * 8 // 100
+        padding_x = responsive_px(
             self._width,
             self._height,
-            NORMAL_TEXT_SCALE,
+            12,
         )
-        spacing = scale
-
-        text_width = (
-            len(hint) * 5 * scale
-            + max(0, len(hint) - 1) * spacing
+        padding_y = responsive_px(
+            self._width,
+            self._height,
+            4,
+        )
+        text_x, text_y, scale, spacing = text_box_layout(
+            hint,
+            hint_x,
+            hint_y,
+            hint_width,
+            hint_height,
+            responsive_scale(
+                self._width,
+                self._height,
+                NORMAL_TEXT_SCALE,
+            ),
+            padding_x,
+            padding_y,
         )
 
         self.graphics.draw_text(
             text=hint,
-            x=(self._width - text_width) // 2,
-            y=int(self._height * 0.64),
+            x=text_x,
+            y=text_y,
             color=GRAY,
             spacing=spacing,
             scale=scale,
@@ -131,6 +150,10 @@ class LevelCompleteScreen(Screen):
             heightp=20,
             name="LEVEL_COMPLETE",
             text="LEVEL COMPLETE!",
+            x_offsetp=5,
+            y_offsetp=15,
+            x_offsetp_rev=5,
+            y_offsetp_rev=15,
         )
 
         # Center rectangle horizontally.

@@ -106,17 +106,25 @@ class InstructionsScreen(Screen):
                 heightp=line_height,
                 name=name,
                 text=text,
+                x_offsetp=5,
+                y_offsetp=10,
+                x_offsetp_rev=5,
+                y_offsetp_rev=10,
             )
             self.layout.center_rect_x(name)
 
         # Bottom "press esc..." message.
         self.layout.add_rect(
             xp=0,
-            yp=95,
+            yp=94,
             widthp=100,
-            heightp=2,
+            heightp=4,
             name="BACK_INFO",
             text="press esc to go back to main menu",
+            x_offsetp=5,
+            y_offsetp=10,
+            x_offsetp_rev=5,
+            y_offsetp_rev=10,
         )
         self.layout.center_rect_x("BACK_INFO")
 
@@ -129,11 +137,7 @@ class InstructionsScreen(Screen):
         )
 
         for name in self.layout.get_rect_names():
-            scale = (
-                NORMAL_TEXT_SCALE
-                if name == "BACK_INFO"
-                else instruction_scale
-            )
+            scale = instruction_scale
             abs_rect = self.layout.get_rect_absolute(
                 name,
                 self._width,

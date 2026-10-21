@@ -54,6 +54,91 @@ def responsive_scale(
     )
 
 
+def responsive_px(
+    width: int,
+    height: int,
+    value: int,
+) -> int:
+    """Scale a pixel value proportionally from the 1280x800 reference."""
+    width_ratio = width / 1280
+    height_ratio = height / 800
+    ratio = min(width_ratio, height_ratio)
+
+    return max(1, int(value * ratio + 0.5))
+
+
+def text_pixel_width(
+    text: str,
+    scale: int,
+    spacing: int | None = None,
+) -> int:
+    """Return the exact bitmap width for text at the given scale."""
+    if spacing is None:
+        spacing = scale
+
+    return (
+        len(text) * 5 * scale
+        + max(0, len(text) - 1) * spacing
+    )
+
+
+def fit_text_scale(
+    text: str,
+    box_width: int,
+    box_height: int,
+    preferred_scale: int,
+    padding_x: int = 0,
+    padding_y: int = 0,
+    spacing_units: int = 1,
+) -> int:
+    """Return a scale that fits text inside a padded pixel box."""
+    inner_width = max(1, box_width - 2 * padding_x)
+    inner_height = max(1, box_height - 2 * padding_y)
+    base_width = (
+        len(text) * 5
+        + max(0, len(text) - 1) * spacing_units
+    )
+
+    if not text:
+        return max(1, preferred_scale)
+
+    width_scale = inner_width // max(1, base_width)
+    height_scale = inner_height // 8
+    maximum = max(1, min(width_scale, height_scale))
+
+    return max(1, min(preferred_scale, maximum))
+
+
+def text_box_layout(
+    text: str,
+    box_x: int,
+    box_y: int,
+    box_width: int,
+    box_height: int,
+    preferred_scale: int,
+    padding_x: int = 0,
+    padding_y: int = 0,
+    spacing_units: int = 1,
+) -> tuple[int, int, int, int]:
+    """Return centered text x/y, scale, and spacing for a pixel box."""
+    scale = fit_text_scale(
+        text,
+        box_width,
+        box_height,
+        preferred_scale,
+        padding_x,
+        padding_y,
+        spacing_units,
+    )
+    spacing = spacing_units * scale
+    text_width = text_pixel_width(text, scale, spacing)
+    text_height = 8 * scale
+    x = box_x + (box_width - text_width) // 2
+    y = box_y + (box_height - text_height) // 2
+
+    return x, y, scale, spacing
+
+
 class AbsoluteText:
     """Store text with pixel placement, glyph scale, spacing, and color."""
 
@@ -259,12 +344,17 @@ class Layout:
         if text_area_width <= 0 or text_area_height <= 0:
             return None
 
-        if scale == 0:
-            scale_x = text_area_width / text_width
-            scale_y = text_area_height / text_height
+        scale_x = text_area_width / text_width
+        scale_y = text_area_height / text_height
+        maximum_scale = max(
+            1,
+            int(math.floor(min(scale_x, scale_y))),
+        )
 
-            # Largest integer scale that fits.
-            scale = max(1, int(math.floor(min(scale_x, scale_y))))
+        if scale == 0:
+            scale = maximum_scale
+        else:
+            scale = max(1, min(scale, maximum_scale))
 
         scaled_width = text_width * scale
         scaled_height = text_height * scale
