@@ -165,8 +165,8 @@ The Level Complete screen advances automatically after three seconds, while Ente
 allows immediate continuation.
 
 The UI uses MLX image layers: the maze can remain cached while actors, pellets, HUD,
-and overlays are redrawn independently. Bitmap text uses shared responsive scaling
-for larger windows while preserving a readable minimum size.
+and overlays are redrawn independently. UI boxes use percentage-based geometry,
+and bitmap text is fitted to each box after its relative padding is applied.
 
 ## General Software Architecture
 

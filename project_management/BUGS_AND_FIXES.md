@@ -20,7 +20,7 @@ their resolutions.
 | Transparent/native graphics layers could trail or leak resources | Explicit layer clearing, compositing rules, and resource cleanup |
 | Only some documented movement keys were handled | Input mapping supports arrows and WASD |
 | Oversized windows could place content outside the physical display | Clamp requested window dimensions to the available display |
-| Main-menu text stayed physically small on larger windows | Use shared responsive bitmap-font scaling |
+| Text and boxes scaled inconsistently between screens | Use percentage-based boxes with relative padding and box-fitted bitmap text |
 | Level-complete flow gave little continuation feedback | Show a countdown, allow Enter immediately, and auto-start the next level after 3 seconds |
 | Power pellets incorrectly blocked level completion | Level completion now depends only on normal pacgums, matching the subject wording |
 

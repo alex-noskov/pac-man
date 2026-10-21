@@ -1,9 +1,9 @@
 import math
+from collections.abc import Iterable
 
 
 BLACK = 0xFF000000
 WHITE = 0xFFFFFFFF
-RED = 0xFFFF0000
 YELLOW = 0xFFFFFF00
 PURPLE = 0xFF800080
 BLUE = 0xFF0000FF
@@ -12,16 +12,11 @@ GREEN = 0xFF00FF00
 LIGHT_GREEN = 0xFF66FF66
 GRAY = 0xFF808080
 PINK = 0xFFFF69B4
-TRANSPARENT = 0x00000000
 LIGHT_RED = 0xFFFF4444
 LIGHT_PINK = 0xFFFF99CC
 CYAN = 0xFF44FFFF
 LIGHT_ORANGE = 0xFFFFAA44
-NAVY = 0xFF000080
-TEAL = 0xFF008080
-DARK_RED = 0xFF8B0000
 GOLD = 0xFFFFD700
-GREEN = 0xFF00FF00
 DARK_ORANGE = 0xFFFF8C00
 LIGHT_GRAY = 0xFFD3D3D3
 
@@ -30,41 +25,30 @@ PAUSE_BACKGROUND = 0xFF000000
 WALLS_COLOR = LIGHT_GRAY
 COLOR_42 = PURPLE
 
-# Fixed bitmap magnification: base glyphs are 5 pixels wide, 8 high.
-NORMAL_TEXT_SCALE = 2
-TITLE_TEXT_SCALE = 3
-HUD_TEXT_SCALE = 2
-
-AUTO_CONTINUE_DELAY = 3.0
+GLYPH_WIDTH = 5
+GLYPH_HEIGHT = 8
 
 
-def responsive_scale(
+def percent_rect(
     width: int,
     height: int,
-    base_scale: int,
-) -> int:
-    """Scale text smoothly from the 1280x800 reference window."""
-    width_ratio = width / 1280
-    height_ratio = height / 800
-    ratio = min(width_ratio, height_ratio)
+    xp: float,
+    yp: float,
+    widthp: float,
+    heightp: float,
+) -> tuple[int, int, int, int]:
+    """Convert percentage geometry to an integer pixel rectangle."""
+    x1 = int(round(xp * width / 100))
+    y1 = int(round(yp * height / 100))
+    x2 = int(round((xp + widthp) * width / 100))
+    y2 = int(round((yp + heightp) * height / 100))
 
-    return max(
-        base_scale,
-        int(base_scale * ratio + 0.5),
+    return (
+        x1,
+        y1,
+        max(1, x2 - x1),
+        max(1, y2 - y1),
     )
-
-
-def responsive_px(
-    width: int,
-    height: int,
-    value: int,
-) -> int:
-    """Scale a pixel value proportionally from the 1280x800 reference."""
-    width_ratio = width / 1280
-    height_ratio = height / 800
-    ratio = min(width_ratio, height_ratio)
-
-    return max(1, int(value * ratio + 0.5))
 
 
 def text_pixel_width(
@@ -77,7 +61,7 @@ def text_pixel_width(
         spacing = scale
 
     return (
-        len(text) * 5 * scale
+        len(text) * GLYPH_WIDTH * scale
         + max(0, len(text) - 1) * spacing
     )
 
@@ -86,27 +70,52 @@ def fit_text_scale(
     text: str,
     box_width: int,
     box_height: int,
-    preferred_scale: int,
-    padding_x: int = 0,
-    padding_y: int = 0,
+    padding_xp: float = 0,
+    padding_yp: float = 0,
     spacing_units: int = 1,
 ) -> int:
-    """Return a scale that fits text inside a padded pixel box."""
-    inner_width = max(1, box_width - 2 * padding_x)
-    inner_height = max(1, box_height - 2 * padding_y)
+    """Return the largest bitmap scale that fits a padded box."""
+    if not text:
+        return 1
+
+    padding_x = box_width * padding_xp / 100
+    padding_y = box_height * padding_yp / 100
+    inner_width = max(1.0, box_width - 2 * padding_x)
+    inner_height = max(1.0, box_height - 2 * padding_y)
     base_width = (
-        len(text) * 5
+        len(text) * GLYPH_WIDTH
         + max(0, len(text) - 1) * spacing_units
     )
 
-    if not text:
-        return max(1, preferred_scale)
+    width_scale = int(inner_width // max(1, base_width))
+    height_scale = int(inner_height // GLYPH_HEIGHT)
 
-    width_scale = inner_width // max(1, base_width)
-    height_scale = inner_height // 8
-    maximum = max(1, min(width_scale, height_scale))
+    return max(1, min(width_scale, height_scale))
 
-    return max(1, min(preferred_scale, maximum))
+
+def fit_text_group_scale(
+    texts: Iterable[str],
+    box_width: int,
+    box_height: int,
+    padding_xp: float = 0,
+    padding_yp: float = 0,
+    spacing_units: int = 1,
+) -> int:
+    """Return one fitted scale shared by every text in a box group."""
+    scales = [
+        fit_text_scale(
+            text,
+            box_width,
+            box_height,
+            padding_xp,
+            padding_yp,
+            spacing_units,
+        )
+        for text in texts
+        if text
+    ]
+
+    return min(scales) if scales else 1
 
 
 def text_box_layout(
@@ -115,28 +124,32 @@ def text_box_layout(
     box_y: int,
     box_width: int,
     box_height: int,
-    preferred_scale: int,
-    padding_x: int = 0,
-    padding_y: int = 0,
+    padding_xp: float = 0,
+    padding_yp: float = 0,
     spacing_units: int = 1,
+    scale: int | None = None,
 ) -> tuple[int, int, int, int]:
-    """Return centered text x/y, scale, and spacing for a pixel box."""
-    scale = fit_text_scale(
+    """Return centered text position, scale, and spacing for a box."""
+    maximum_scale = fit_text_scale(
         text,
         box_width,
         box_height,
-        preferred_scale,
-        padding_x,
-        padding_y,
+        padding_xp,
+        padding_yp,
         spacing_units,
     )
-    spacing = spacing_units * scale
-    text_width = text_pixel_width(text, scale, spacing)
-    text_height = 8 * scale
+    actual_scale = (
+        maximum_scale
+        if scale is None
+        else max(1, min(scale, maximum_scale))
+    )
+    spacing = spacing_units * actual_scale
+    text_width = text_pixel_width(text, actual_scale, spacing)
+    text_height = GLYPH_HEIGHT * actual_scale
     x = box_x + (box_width - text_width) // 2
     y = box_y + (box_height - text_height) // 2
 
-    return x, y, scale, spacing
+    return x, y, actual_scale, spacing
 
 
 class AbsoluteText:
@@ -275,7 +288,7 @@ class Layout:
         height: int,
         scale: int = 0,
     ) -> AbsoluteRect | None:
-        """Return pixel bounds and scaled text, or None for an unknown name."""
+        """Return pixel bounds and fitted text for a named rectangle."""
         rect = self._rects.get(name)
         if rect is None:
             return None
@@ -287,20 +300,48 @@ class Layout:
             rect.text_spacing,
             scale,
         )
-
-        x1 = rect.xp * width / 100
-        y1 = rect.yp * height / 100
-        x2 = (rect.xp + rect.widthp) * width / 100
-        y2 = (rect.yp + rect.heightp) * height / 100
+        x, y, rect_width, rect_height = percent_rect(
+            width,
+            height,
+            rect.xp,
+            rect.yp,
+            rect.widthp,
+            rect.heightp,
+        )
 
         return AbsoluteRect(
             rect.name,
-            int(math.ceil(x1)),
-            int(math.ceil(y1)),
-            int(math.ceil(x2 - x1)),
-            int(math.ceil(y2 - y1)),
+            x,
+            y,
+            rect_width,
+            rect_height,
             abs_text,
         )
+
+    def get_shared_text_scale(
+        self,
+        names: Iterable[str],
+        width: int,
+        height: int,
+    ) -> int:
+        """Return one auto-fitted scale shared by named layout rectangles."""
+        scales: list[int] = []
+
+        for name in names:
+            rect = self._rects.get(name)
+            if rect is None or not rect.text:
+                continue
+            text = self._calculate_text(
+                rect,
+                width,
+                height,
+                rect.text_spacing,
+                0,
+            )
+            if text is not None:
+                scales.append(text.scale)
+
+        return min(scales) if scales else 1
 
     def _calculate_text(
         self,
@@ -310,56 +351,53 @@ class Layout:
         spacing: int = 1,
         scale: int = 0,
     ) -> AbsoluteText | None:
-        """Return centered scaled text, or None for empty text or area."""
+        """Return centered fitted text, or None for empty text or area."""
         if not rect.text:
             return None
 
-        char_width = 5
-        char_height = 8
-        character_count = len(rect.text)
-
-        text_width = (
-            character_count * char_width
-            + max(0, character_count - 1) * spacing
+        rect_x, rect_y, rect_width, rect_height = percent_rect(
+            window_width,
+            window_height,
+            rect.xp,
+            rect.yp,
+            rect.widthp,
+            rect.heightp,
         )
-        text_height = char_height
 
-        # Rectangle in pixels.
-        rect_x = rect.xp * window_width / 100
-        rect_y = rect.yp * window_height / 100
-        rect_width = rect.widthp * window_width / 100
-        rect_height = rect.heightp * window_height / 100
-
-        # Offsets are percentages of the rectangle.
         left_inset = rect.x_offsetp * rect_width / 100
         top_inset = rect.y_offsetp * rect_height / 100
         right_inset = rect.x_offsetp_rev * rect_width / 100
         bottom_inset = rect.y_offsetp_rev * rect_height / 100
-
-        text_area_x = rect_x + left_inset
-        text_area_y = rect_y + top_inset
         text_area_width = rect_width - left_inset - right_inset
         text_area_height = rect_height - top_inset - bottom_inset
 
         if text_area_width <= 0 or text_area_height <= 0:
             return None
 
-        scale_x = text_area_width / text_width
-        scale_y = text_area_height / text_height
+        base_width = (
+            len(rect.text) * GLYPH_WIDTH
+            + max(0, len(rect.text) - 1) * spacing
+        )
+        scale_x = text_area_width / max(1, base_width)
+        scale_y = text_area_height / GLYPH_HEIGHT
         maximum_scale = max(
             1,
             int(math.floor(min(scale_x, scale_y))),
         )
-
-        if scale == 0:
-            scale = maximum_scale
-        else:
-            scale = max(1, min(scale, maximum_scale))
-
-        scaled_width = text_width * scale
-        scaled_height = text_height * scale
-        scaled_spacing = spacing * scale
-
+        actual_scale = (
+            maximum_scale
+            if scale == 0
+            else max(1, min(scale, maximum_scale))
+        )
+        scaled_spacing = spacing * actual_scale
+        scaled_width = text_pixel_width(
+            rect.text,
+            actual_scale,
+            scaled_spacing,
+        )
+        scaled_height = GLYPH_HEIGHT * actual_scale
+        text_area_x = rect_x + left_inset
+        text_area_y = rect_y + top_inset
         text_x = text_area_x + (text_area_width - scaled_width) / 2
         text_y = text_area_y + (text_area_height - scaled_height) / 2
 
@@ -368,7 +406,7 @@ class Layout:
             int(math.ceil(text_x)),
             int(math.ceil(text_y)),
             scaled_spacing,
-            scale,
+            actual_scale,
         )
 
     def get_rect_names(self) -> list[str]:

@@ -9,15 +9,14 @@ from .layout import (
     BLACK,
     GRAY,
     Layout,
-    NORMAL_TEXT_SCALE,
-    TITLE_TEXT_SCALE,
     YELLOW,
-    AUTO_CONTINUE_DELAY,
-    responsive_px,
-    responsive_scale,
+    percent_rect,
     text_box_layout,
 )
 from .screen_base import Screen
+
+
+AUTO_CONTINUE_DELAY = 3.0
 
 
 class LevelCompleteScreen(Screen):
@@ -30,7 +29,6 @@ class LevelCompleteScreen(Screen):
         """Build and cache the level-complete layout for the window."""
         self.graphics = graphics
         self._self_app_state = AppState.LEVEL_COMPLETE
-
         self._started_at = time.monotonic()
 
         sizes = self.graphics.get_window_size()
@@ -56,16 +54,13 @@ class LevelCompleteScreen(Screen):
             return AppState.GAME
         if event.type == EventType.CLOSE:
             return AppState.EXIT
-
         return self._self_app_state
 
     def update(self) -> AppState:
         """Automatically continue after a short delay."""
         elapsed = time.monotonic() - self._started_at
-
         if elapsed >= AUTO_CONTINUE_DELAY:
             return AppState.GAME
-
         return self._self_app_state
 
     def render(self) -> AppState:
@@ -81,7 +76,6 @@ class LevelCompleteScreen(Screen):
                 height=abs_rect.height,
                 color=YELLOW,
             )
-
             if abs_rect.text is not None:
                 self.graphics.draw_text(
                     text=abs_rect.text.text,
@@ -97,36 +91,20 @@ class LevelCompleteScreen(Screen):
             1,
             math.ceil(AUTO_CONTINUE_DELAY - elapsed),
         )
-
         hint = f"NEXT LEVEL IN {remaining} - ENTER TO CONTINUE"
-
-        hint_x = self._width // 10
-        hint_y = self._height * 61 // 100
-        hint_width = self._width * 8 // 10
-        hint_height = self._height * 8 // 100
-        padding_x = responsive_px(
+        hint_box = percent_rect(
             self._width,
             self._height,
-            12,
-        )
-        padding_y = responsive_px(
-            self._width,
-            self._height,
-            4,
+            10,
+            61,
+            80,
+            8,
         )
         text_x, text_y, scale, spacing = text_box_layout(
             hint,
-            hint_x,
-            hint_y,
-            hint_width,
-            hint_height,
-            responsive_scale(
-                self._width,
-                self._height,
-                NORMAL_TEXT_SCALE,
-            ),
-            padding_x,
-            padding_y,
+            *hint_box,
+            padding_xp=3,
+            padding_yp=15,
         )
 
         self.graphics.draw_text(
@@ -142,7 +120,7 @@ class LevelCompleteScreen(Screen):
         return self._self_app_state
 
     def _gen_layout(self) -> None:
-        """Generate the level complete rectangle."""
+        """Generate the level-complete percentage rectangle."""
         self.layout.add_rect(
             xp=25,
             yp=40,
@@ -151,25 +129,18 @@ class LevelCompleteScreen(Screen):
             name="LEVEL_COMPLETE",
             text="LEVEL COMPLETE!",
             x_offsetp=5,
-            y_offsetp=15,
+            y_offsetp=25,
             x_offsetp_rev=5,
-            y_offsetp_rev=15,
+            y_offsetp_rev=25,
         )
-
-        # Center rectangle horizontally.
         self.layout.center_rect_x("LEVEL_COMPLETE")
 
     def _cache_abs_layout(self) -> None:
-        """Cache absolute geometry."""
+        """Cache responsive geometry with text fitted to the box."""
         abs_rect = self.layout.get_rect_absolute(
             "LEVEL_COMPLETE",
             self._width,
             self._height,
-            responsive_scale(
-                self._width,
-                self._height,
-                TITLE_TEXT_SCALE,
-            ),
         )
         if abs_rect is None:
             return

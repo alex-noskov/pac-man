@@ -1,26 +1,18 @@
 """Victory/loss score presentation and keyboard player-name entry."""
 from ..highscores import HighscoreStore
 from ..models import AppState
-from .layout import (
-    BLACK,
-    NORMAL_TEXT_SCALE,
-    TITLE_TEXT_SCALE,
-    WHITE,
-    YELLOW,
-    responsive_px,
-    responsive_scale,
-    text_box_layout,
-)
 from .events import Event, EventType
 from .graphics import Graphics
+from .layout import (
+    BLACK,
+    WHITE,
+    YELLOW,
+    fit_text_group_scale,
+    percent_rect,
+    text_box_layout,
+    text_pixel_width,
+)
 from .screen_base import Screen
-
-NAME_BOX_WIDTH = 600
-NAME_BOX_HEIGHT = 48
-NAME_BOX_Y = 280
-SAVE_BUTTON_WIDTH = 560
-SAVE_BUTTON_HEIGHT = 48
-SAVE_BUTTON_Y = 390
 
 
 class EndScreen(Screen):
@@ -84,14 +76,9 @@ class EndScreen(Screen):
         return self.state
 
     def render(self) -> AppState:
-        """Present a responsive keyboard field and save confirmation."""
+        """Render percentage boxes with text fitted inside their padding."""
         g = self.graphics
         width, height = g.get_window_size()
-        normal_scale = responsive_scale(
-            width,
-            height,
-            NORMAL_TEXT_SCALE,
-        )
 
         g.set_layer_order(['main'])
         g.fill(BLACK)
@@ -100,44 +87,48 @@ class EndScreen(Screen):
             'VICTORY - CONGRATULATIONS'
             if self.state == AppState.VICTORY
             else 'GAME OVER',
-            responsive_px(width, height, 70),
+            5,
+            4,
+            90,
+            10,
             YELLOW,
-            TITLE_TEXT_SCALE,
         )
         self._line(
             f'FINAL SCORE {self.score}',
-            responsive_px(width, height, 126),
+            10,
+            15,
+            80,
+            6,
         )
         self._line(
             'TYPE ON YOUR KEYBOARD TO ENTER YOUR NAME',
-            responsive_px(width, height, 194),
+            5,
+            23,
+            90,
+            6,
         )
         self._line(
             'SAVE FAILED - ENTER TO RETRY'
             if self.message
             else 'MAX 10: LETTERS / DIGITS / SPACES',
-            responsive_px(width, height, 238),
+            5,
+            29,
+            90,
+            6,
             YELLOW,
         )
 
-        box_width = responsive_px(
+        name_box = percent_rect(
             width,
             height,
-            NAME_BOX_WIDTH,
+            26.5,
+            36,
+            47,
+            7,
         )
-        box_height = responsive_px(
-            width,
-            height,
-            NAME_BOX_HEIGHT,
-        )
-        top = responsive_px(
-            width,
-            height,
-            NAME_BOX_Y,
-        )
-        left = (width - box_width) // 2
+        left, top, box_width, box_height = name_box
+        border = max(1, min(box_width, box_height) // 24)
 
-        border = responsive_px(width, height, 2)
         g.draw_rectangle(
             left,
             top,
@@ -148,25 +139,27 @@ class EndScreen(Screen):
         g.draw_rectangle(
             left + border,
             top + border,
-            box_width - 2 * border,
-            box_height - 2 * border,
+            max(1, box_width - 2 * border),
+            max(1, box_height - 2 * border),
             0xFF18243B,
         )
 
-        text = self.name.upper() if self.name else 'TYPE YOUR NAME HERE'
-        padding_x = responsive_px(width, height, 24)
-        padding_y = responsive_px(width, height, 8)
-        text_x, text_y, field_scale, spacing = text_box_layout(
-            text,
-            left,
-            top,
+        placeholder = 'TYPE YOUR NAME HERE'
+        text = self.name.upper() if self.name else placeholder
+        field_scale = fit_text_group_scale(
+            (placeholder, text),
             box_width,
             box_height,
-            normal_scale,
-            padding_x,
-            padding_y,
+            padding_xp=5,
+            padding_yp=18,
         )
-
+        text_x, text_y, _, spacing = text_box_layout(
+            text,
+            *name_box,
+            padding_xp=5,
+            padding_yp=18,
+            scale=field_scale,
+        )
         g.draw_text(
             text,
             text_x,
@@ -177,54 +170,40 @@ class EndScreen(Screen):
         )
 
         if self.name and not self._added:
-            cursor_width = responsive_px(width, height, 2)
-            cursor_gap = responsive_px(width, height, 2)
-            text_width = (
-                len(text) * 5 * field_scale
-                + max(0, len(text) - 1) * spacing
+            cursor_width = border
+            cursor_gap = border
+            typed_width = text_pixel_width(
+                text,
+                field_scale,
+                spacing,
             )
             g.draw_rectangle(
-                text_x + text_width + cursor_gap,
+                text_x + typed_width + cursor_gap,
                 text_y,
                 cursor_width,
                 8 * field_scale,
                 YELLOW,
             )
 
-        button_width = responsive_px(
+        save_box = percent_rect(
             width,
             height,
-            SAVE_BUTTON_WIDTH,
+            28,
+            49,
+            44,
+            7,
         )
-        button_height = responsive_px(
-            width,
-            height,
-            SAVE_BUTTON_HEIGHT,
-        )
-        button_top = responsive_px(
-            width,
-            height,
-            SAVE_BUTTON_Y,
-        )
-        button_left = (width - button_width) // 2
         g.draw_rectangle(
-            button_left,
-            button_top,
-            button_width,
-            button_height,
+            *save_box,
             YELLOW,
         )
         button_text = 'PRESS ENTER TO SAVE SCORE'
         button_x, button_y, button_scale, button_spacing = (
             text_box_layout(
                 button_text,
-                button_left,
-                button_top,
-                button_width,
-                button_height,
-                normal_scale,
-                padding_x,
-                padding_y,
+                *save_box,
+                padding_xp=5,
+                padding_yp=18,
             )
         )
         g.draw_text(
@@ -235,14 +214,21 @@ class EndScreen(Screen):
             scale=button_scale,
             spacing=button_spacing,
         )
+
         self._line(
             'BACKSPACE TO EDIT   ESC TO SKIP SAVING',
-            responsive_px(width, height, 482),
+            5,
+            60,
+            90,
+            6,
         )
         if self.message:
             self._line(
                 self.message[:60],
-                responsive_px(width, height, 530),
+                5,
+                67,
+                90,
+                6,
                 YELLOW,
             )
 
@@ -252,42 +238,33 @@ class EndScreen(Screen):
     def _line(
         self,
         text: str,
-        center_y: int,
+        xp: float,
+        yp: float,
+        widthp: float,
+        heightp: float,
         color: int = WHITE,
-        scale: int = NORMAL_TEXT_SCALE,
     ) -> None:
-        """Center a responsive line inside a padded screen-width box."""
+        """Draw one centered line inside a percentage-based text box."""
         width, height = self.graphics.get_window_size()
-        preferred_scale = responsive_scale(
+        box = percent_rect(
             width,
             height,
-            scale,
+            xp,
+            yp,
+            widthp,
+            heightp,
         )
-        box_x = responsive_px(width, height, 32)
-        box_width = max(1, width - 2 * box_x)
-        box_height = responsive_px(
-            width,
-            height,
-            52 if scale == TITLE_TEXT_SCALE else 36,
-        )
-        box_y = center_y - box_height // 2
-        padding_x = responsive_px(width, height, 8)
-        padding_y = responsive_px(width, height, 4)
-        text_x, text_y, actual_scale, spacing = text_box_layout(
+        text_x, text_y, scale, spacing = text_box_layout(
             text.upper(),
-            box_x,
-            box_y,
-            box_width,
-            box_height,
-            preferred_scale,
-            padding_x,
-            padding_y,
+            *box,
+            padding_xp=4,
+            padding_yp=18,
         )
         self.graphics.draw_text(
             text.upper(),
             text_x,
             text_y,
             color,
-            scale=actual_scale,
+            scale=scale,
             spacing=spacing,
         )

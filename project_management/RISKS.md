@@ -12,7 +12,7 @@
 | Highscore file is missing, corrupt, or unwritable | Crash or data loss | Validate loaded rows, recover cleanly, and save with atomic replacement |
 | Native MLX callback raises an exception | Crash across the C callback boundary | Capture callback failures and release native resources safely |
 | Display smaller than configured window | UI may not fit | Fit requested dimensions to the actual display |
-| Very large window makes bitmap text too small relative to the UI | Poor readability | Use shared responsive text scaling from the reference window size |
+| Window size changes make text or controls disproportionate | Poor readability | Use percentage-based boxes, relative padding, and text fitted to each box |
 | Evaluator changes gameplay values | Hidden hard-coded assumptions may appear | Keep speeds, score values, timer, lives, seed, and other gameplay settings configuration-driven |
 | External public-platform upload is forgotten | Mandatory delivery requirement may be incomplete | Confirm the final uploaded build and launch it from the platform before defense |
 | Last-minute changes invalidate documentation or behavior | Submitted evidence may no longer match the code | Run lint/type checks, packaging, and the final manual acceptance checklist after the last change |

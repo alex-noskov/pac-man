@@ -1,14 +1,7 @@
 from ..models import AppState
-from .layout import (
-    BLACK,
-    NORMAL_TEXT_SCALE,
-    WHITE,
-    YELLOW,
-    responsive_scale,
-)
 from .events import Event, EventType
 from .graphics import Graphics
-from .layout import AbsoluteRect, Layout
+from .layout import AbsoluteRect, BLACK, Layout, WHITE, YELLOW
 from .screen_base import Screen
 
 
@@ -70,6 +63,7 @@ class InstructionsScreen(Screen):
         """Render the screen."""
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
+
         for abs_rect in self._cache.values():
             if abs_rect.text is not None:
                 self.graphics.draw_text(
@@ -88,13 +82,10 @@ class InstructionsScreen(Screen):
         """Arrange instructions and the return hint in percentage space."""
         line_height = 4
         line_spacing = 1
-
         total_height = (
             len(self._instructions) * line_height
             + (len(self._instructions) - 1) * line_spacing
         )
-
-        # Move the instruction block slightly above the center.
         start_y = (100 - total_height) / 2 - 5
 
         for index, text in enumerate(self._instructions):
@@ -113,7 +104,6 @@ class InstructionsScreen(Screen):
             )
             self.layout.center_rect_x(name)
 
-        # Bottom "press esc..." message.
         self.layout.add_rect(
             xp=0,
             yp=94,
@@ -129,28 +119,38 @@ class InstructionsScreen(Screen):
         self.layout.center_rect_x("BACK_INFO")
 
     def _cache_abs_layout(self) -> None:
-        """Cache pixel geometry and text colors for the instruction labels."""
-        instruction_scale = responsive_scale(
+        """Cache box-fitted text with one scale for instruction lines."""
+        instruction_names = [
+            f"INSTRUCTION_{index}"
+            for index in range(len(self._instructions))
+        ]
+        instruction_scale = self.layout.get_shared_text_scale(
+            instruction_names,
             self._width,
             self._height,
-            NORMAL_TEXT_SCALE,
         )
 
-        for name in self.layout.get_rect_names():
-            scale = instruction_scale
+        for name in instruction_names:
             abs_rect = self.layout.get_rect_absolute(
                 name,
                 self._width,
                 self._height,
-                scale,
+                instruction_scale,
             )
             if abs_rect is None:
                 continue
-
             abs_rect.color = BLACK
             if abs_rect.text is not None:
-                if name == "BACK_INFO":
-                    abs_rect.text.color = WHITE
-                else:
-                    abs_rect.text.color = YELLOW
+                abs_rect.text.color = YELLOW
             self._cache[name] = abs_rect
+
+        back_info = self.layout.get_rect_absolute(
+            "BACK_INFO",
+            self._width,
+            self._height,
+        )
+        if back_info is not None:
+            back_info.color = BLACK
+            if back_info.text is not None:
+                back_info.text.color = WHITE
+            self._cache["BACK_INFO"] = back_info

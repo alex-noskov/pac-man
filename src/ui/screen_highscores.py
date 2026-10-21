@@ -1,18 +1,17 @@
 from ..highscores import HighscoreStore
 from ..models import AppState
-from .layout import (
-    BLACK,
-    NORMAL_TEXT_SCALE,
-    TITLE_TEXT_SCALE,
-    WHITE,
-    YELLOW,
-    responsive_px,
-    responsive_scale,
-    text_box_layout,
-)
 from .events import Event, EventType
 from .graphics import Graphics
-from .layout import AbsoluteRect, Layout
+from .layout import (
+    AbsoluteRect,
+    BLACK,
+    Layout,
+    WHITE,
+    YELLOW,
+    fit_text_group_scale,
+    percent_rect,
+    text_box_layout,
+)
 from .screen_base import Screen
 
 
@@ -57,6 +56,7 @@ class HighscoresScreen(Screen):
         """Render the screen."""
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
+
         for abs_rect in self._cache.values():
             if abs_rect.text is not None:
                 self.graphics.draw_text(
@@ -73,36 +73,38 @@ class HighscoresScreen(Screen):
             f"{index + 1:2} {entry['name'].upper():10} {entry['score']}"
             for index, entry in enumerate(entries)
         ] or ['NO HIGHSCORES YET']
-        row_x = self._width // 10
-        row_width = self._width * 8 // 10
-        row_height = self._height // 18
-        row_padding_x = responsive_px(
+
+        first_box = percent_rect(
             self._width,
             self._height,
-            12,
+            10,
+            25,
+            80,
+            5.5,
         )
-        row_padding_y = responsive_px(
-            self._width,
-            self._height,
-            3,
-        )
-        preferred_scale = responsive_scale(
-            self._width,
-            self._height,
-            NORMAL_TEXT_SCALE,
+        row_scale = fit_text_group_scale(
+            rows,
+            first_box[2],
+            first_box[3],
+            padding_xp=2,
+            padding_yp=10,
         )
 
         for index, text in enumerate(rows):
-            row_y = self._height // 4 + index * row_height
+            row_box = percent_rect(
+                self._width,
+                self._height,
+                10,
+                25 + index * 5.5,
+                80,
+                5.5,
+            )
             text_x, text_y, scale, spacing = text_box_layout(
                 text,
-                row_x,
-                row_y,
-                row_width,
-                row_height,
-                preferred_scale,
-                row_padding_x,
-                row_padding_y,
+                *row_box,
+                padding_xp=2,
+                padding_yp=10,
+                scale=row_scale,
             )
             self.graphics.draw_text(
                 text,
@@ -115,19 +117,19 @@ class HighscoresScreen(Screen):
 
         if self.store is not None and self.store.error:
             error = 'HIGHSCORE FILE ERROR - SEE CONSOLE'
-            error_x = self._width // 20
-            error_y = self._height * 86 // 100
-            error_width = self._width * 9 // 10
-            error_height = self._height * 6 // 100
+            error_box = percent_rect(
+                self._width,
+                self._height,
+                5,
+                86,
+                90,
+                6,
+            )
             text_x, text_y, scale, spacing = text_box_layout(
                 error,
-                error_x,
-                error_y,
-                error_width,
-                error_height,
-                preferred_scale,
-                row_padding_x,
-                row_padding_y,
+                *error_box,
+                padding_xp=3,
+                padding_yp=10,
             )
             self.graphics.draw_text(
                 error,
@@ -137,27 +139,26 @@ class HighscoresScreen(Screen):
                 scale=scale,
                 spacing=spacing,
             )
+
         self.graphics.refresh()
         return self._self_app_state
 
     def _gen_layout(self) -> None:
         """Add percentage-based title and return-instruction rectangles."""
-        # Title rectangle starts 10% down from the top.
         self.layout.add_rect(
             xp=0,
-            yp=10,
+            yp=9,
             widthp=100,
-            heightp=5,
+            heightp=7,
             name="TITLE",
             text="HIGHSCORES",
             x_offsetp=4,
-            y_offsetp=10,
+            y_offsetp=15,
             x_offsetp_rev=4,
-            y_offsetp_rev=10,
+            y_offsetp_rev=15,
         )
         self.layout.center_rect_x("TITLE")
 
-        # Return hint near the bottom of the window.
         self.layout.add_rect(
             xp=0,
             yp=94,
@@ -173,34 +174,19 @@ class HighscoresScreen(Screen):
         self.layout.center_rect_x("BACK_INFO")
 
     def _cache_abs_layout(self) -> None:
-        """Cache pixel geometry and text colors for the static labels."""
+        """Cache responsive geometry and text colors for static labels."""
         for name in ("TITLE", "BACK_INFO"):
-            scale = (
-                responsive_scale(
-                    self._width,
-                    self._height,
-                    TITLE_TEXT_SCALE,
-                )
-                if name == 'TITLE'
-                else responsive_scale(
-                    self._width,
-                    self._height,
-                    NORMAL_TEXT_SCALE,
-                )
-            )
             abs_rect = self.layout.get_rect_absolute(
                 name,
                 self._width,
                 self._height,
-                scale,
             )
             if abs_rect is None:
                 continue
 
             abs_rect.color = BLACK
             if abs_rect.text is not None:
-                if name == "TITLE":
-                    abs_rect.text.color = YELLOW
-                else:
-                    abs_rect.text.color = WHITE
+                abs_rect.text.color = (
+                    YELLOW if name == "TITLE" else WHITE
+                )
             self._cache[name] = abs_rect

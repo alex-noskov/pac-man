@@ -73,11 +73,13 @@ Configuration values are validated independently. Missing or invalid values fall
 back to safe defaults with a clear message, and unknown keys are ignored. This
 allows evaluators to modify the configuration without causing a traceback.
 
-## Responsive UI text
+## Responsive UI geometry and text
 
-`1280 x 800` is the reference window size. Important bitmap text uses shared
-responsive scaling so it remains readable on larger windows while keeping a
-minimum size on smaller supported windows.
+UI boxes are defined from percentages of the actual window instead of being
+scaled from one reference resolution. Padding is relative to each box, and
+bitmap text chooses the largest integer scale that fits inside the padded box.
+Related labels such as menu buttons and instruction rows share one fitted scale
+so their typography remains consistent.
 
 Oversized requested windows are also fitted to the available display so the
 interface remains usable on smaller screens.

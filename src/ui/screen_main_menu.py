@@ -1,20 +1,19 @@
 from ..highscores import HighscoreStore
 from ..models import AppState
+from .events import Event, EventType
+from .graphics import Graphics
 from .layout import (
+    AbsoluteRect,
     BLACK,
     BLUE,
-    NORMAL_TEXT_SCALE,
+    Layout,
     ORANGE,
     PURPLE,
     WHITE,
     YELLOW,
-    responsive_px,
-    responsive_scale,
+    percent_rect,
     text_box_layout,
 )
-from .events import Event, EventType
-from .graphics import Graphics
-from .layout import AbsoluteRect, Layout
 from .screen_base import Screen
 
 
@@ -42,7 +41,6 @@ class MainMenuScreen(Screen):
         self._width: int = sizes[0]
         self._height: int = sizes[1]
         self._cache: dict[str, AbsoluteRect] = {}
-        # Each button is (layout name, visible label, destination state).
         self._buttons: list[tuple[str, str, AppState]] = [
             ('GAME', 'PLAY', AppState.GAME),
             ('HIGHSCORES', 'HIGHSCORES', AppState.HIGHSCORES),
@@ -62,47 +60,25 @@ class MainMenuScreen(Screen):
         if event.type == EventType.CLOSE:
             return AppState.EXIT
         if event.type == EventType.KEY_UP:
-            if self._selected > 0:
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    False,
-                )
-                self._selected -= 1
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    True,
-                )
-            else:
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    False,
-                )
-                self._selected = len(self._buttons) - 1
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    True,
-                )
+            self._set_rect_colors(
+                self._buttons[self._selected][0],
+                False,
+            )
+            self._selected = (self._selected - 1) % len(self._buttons)
+            self._set_rect_colors(
+                self._buttons[self._selected][0],
+                True,
+            )
         elif event.type == EventType.KEY_DOWN:
-            if self._selected < len(self._buttons) - 1:
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    False,
-                )
-                self._selected += 1
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    True,
-                )
-            else:
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    False,
-                )
-                self._selected = 0
-                self._set_rect_colors(
-                    self._buttons[self._selected][0],
-                    True,
-                )
+            self._set_rect_colors(
+                self._buttons[self._selected][0],
+                False,
+            )
+            self._selected = (self._selected + 1) % len(self._buttons)
+            self._set_rect_colors(
+                self._buttons[self._selected][0],
+                True,
+            )
         elif event.type == EventType.KEY_ENTER:
             return self._buttons[self._selected][2]
         return self._self_app_state
@@ -113,8 +89,9 @@ class MainMenuScreen(Screen):
 
     def render(self) -> AppState:
         """Render the screen."""
-        self.graphics.fill(BLACK)
+        self.graphics.fill(BACKGROUND_COLOR)
         self.graphics.set_layer_order(["main"])
+
         for abs_rect in self._cache.values():
             self.graphics.draw_rectangle(
                 x=abs_rect.x,
@@ -132,38 +109,24 @@ class MainMenuScreen(Screen):
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
+
         if self.store is not None and self.store.entries:
             best = self.store.entries[0]
             text = f"BEST {best['name'].upper()} {best['score']}"
-            box_x = self._width // 10
-            box_y = self._height * 4 // 100
-            box_width = self._width * 8 // 10
-            box_height = self._height * 8 // 100
-            padding_x = responsive_px(
+            box = percent_rect(
                 self._width,
                 self._height,
-                12,
-            )
-            padding_y = responsive_px(
-                self._width,
-                self._height,
+                10,
                 4,
+                80,
+                8,
             )
             text_x, text_y, scale, spacing = text_box_layout(
                 text,
-                box_x,
-                box_y,
-                box_width,
-                box_height,
-                responsive_scale(
-                    self._width,
-                    self._height,
-                    NORMAL_TEXT_SCALE,
-                ),
-                padding_x,
-                padding_y,
+                *box,
+                padding_xp=3,
+                padding_yp=15,
             )
-
             self.graphics.draw_text(
                 text,
                 text_x,
@@ -172,6 +135,7 @@ class MainMenuScreen(Screen):
                 scale=scale,
                 spacing=spacing,
             )
+
         self.graphics.refresh()
         return self._self_app_state
 
@@ -204,11 +168,12 @@ class MainMenuScreen(Screen):
                 name=name,
                 text=label,
                 x_offsetp=5,
-                y_offsetp=15,
+                y_offsetp=20,
                 x_offsetp_rev=5,
-                y_offsetp_rev=15,
+                y_offsetp_rev=20,
             )
             self.layout.center_rect_x(name)
+
         self.layout.add_rect(
             xp=0,
             yp=94,
@@ -224,14 +189,15 @@ class MainMenuScreen(Screen):
         self.layout.center_rect_x("CONTROL_INFO")
 
     def _cache_abs_layout(self) -> None:
-        """Cache pixel geometry with shared button scale and default colors."""
-        button_scale = responsive_scale(
+        """Cache responsive geometry with one shared button text scale."""
+        button_names = [name for name, _, _ in self._buttons]
+        button_scale = self.layout.get_shared_text_scale(
+            button_names,
             self._width,
             self._height,
-            NORMAL_TEXT_SCALE,
         )
 
-        for button_name, _, _ in self._buttons:
+        for button_name in button_names:
             abs_rect = self.layout.get_rect_absolute(
                 button_name,
                 self._width,
@@ -244,18 +210,14 @@ class MainMenuScreen(Screen):
             if abs_rect.text is not None:
                 abs_rect.text.color = DEF_TEXT_COLOR
             self._cache[abs_rect.name] = abs_rect
-        abs_control_info = self.layout.get_rect_absolute(
+
+        control = self.layout.get_rect_absolute(
             "CONTROL_INFO",
             self._width,
             self._height,
-            responsive_scale(
-                self._width,
-                self._height,
-                NORMAL_TEXT_SCALE,
-            ),
         )
-        if abs_control_info is not None:
-            abs_control_info.color = BLACK
-            if abs_control_info.text is not None:
-                abs_control_info.text.color = WHITE
-            self._cache["CONTROL_INFO"] = abs_control_info
+        if control is not None:
+            control.color = BLACK
+            if control.text is not None:
+                control.text.color = WHITE
+            self._cache["CONTROL_INFO"] = control
