@@ -22,7 +22,8 @@ lint-strict:
 	$(UV) mypy . --strict --ignore-missing-imports
 
 clean:
-	$(UV) python clean.py
+	rm -rf __pycache__ .mypy_cache .pytest_cache
+	find src -type d -name '__pycache__' -prune -exec rm -rf {} +
 
 package:
 	$(UV) python package.py

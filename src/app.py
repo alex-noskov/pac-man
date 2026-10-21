@@ -115,14 +115,23 @@ class App:
             if state == AppState.GAME and previous == AppState.MAIN_MENU:
                 self.game_screen.new_game()
                 state = self.game_screen.session.state
+
             elif (
                 state == AppState.GAME
                 and previous == AppState.LEVEL_COMPLETE
             ):
                 self.game_screen.next_level()
                 state = self.game_screen.session.state
+
+            if state == AppState.LEVEL_COMPLETE:
+                level_complete = self.screens[state]
+
+                if isinstance(level_complete, LevelCompleteScreen):
+                    level_complete.begin()
+
             if state in (AppState.GAME_OVER, AppState.VICTORY):
                 outcome = self.screens[state]
+
                 if isinstance(outcome, EndScreen):
                     outcome.begin(self.game_screen.session.score)
         self.state = state

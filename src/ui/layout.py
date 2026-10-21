@@ -35,6 +35,8 @@ NORMAL_TEXT_SCALE = 2
 TITLE_TEXT_SCALE = 3
 HUD_TEXT_SCALE = 2
 
+AUTO_CONTINUE_DELAY = 3.0
+
 
 class AbsoluteText:
     """Store text with pixel placement, glyph scale, spacing, and color."""

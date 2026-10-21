@@ -133,13 +133,20 @@ class MainMenuScreen(Screen):
             best = self.store.entries[0]
             text = f"BEST {best['name'].upper()} {best['score']}"
             scale = NORMAL_TEXT_SCALE
+            spacing = scale
+
+            text_width = (
+                len(text) * 5 * scale
+                + max(0, len(text) - 1) * spacing
+            )
+
             self.graphics.draw_text(
                 text,
-                max(10, (self._width - len(text) * 6 * scale) // 2),
+                max(10, (self._width - text_width) // 2),
                 self._height // 12,
                 WHITE,
                 scale=scale,
-                spacing=scale,
+                spacing=spacing,
             )
         self.graphics.refresh()
         return self._self_app_state

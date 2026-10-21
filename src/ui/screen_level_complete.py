@@ -1,8 +1,19 @@
+import math
+import time
+
 from ..models import AppState
-from .layout import BLACK, TITLE_TEXT_SCALE, YELLOW
 from .events import Event, EventType
 from .graphics import Graphics
-from .layout import AbsoluteRect, Layout
+from .layout import (
+    AbsoluteRect,
+    BLACK,
+    GRAY,
+    Layout,
+    NORMAL_TEXT_SCALE,
+    TITLE_TEXT_SCALE,
+    YELLOW,
+    AUTO_CONTINUE_DELAY,
+)
 from .screen_base import Screen
 
 
@@ -17,6 +28,8 @@ class LevelCompleteScreen(Screen):
         self.graphics = graphics
         self._self_app_state = AppState.LEVEL_COMPLETE
 
+        self._started_at = time.monotonic()
+
         sizes = self.graphics.get_window_size()
         self._width = sizes[0]
         self._height = sizes[1]
@@ -27,6 +40,10 @@ class LevelCompleteScreen(Screen):
         self._gen_layout()
         self._cache_abs_layout()
 
+    def begin(self) -> None:
+        """Restart the automatic next-level countdown."""
+        self._started_at = time.monotonic()
+
     def handle_event(
         self,
         event: Event,
@@ -34,23 +51,26 @@ class LevelCompleteScreen(Screen):
         """Handle input events."""
         if event.type == EventType.KEY_ENTER:
             return AppState.GAME
-        if event.type == EventType.KEY_ESC:
-            return AppState.MAIN_MENU
         if event.type == EventType.CLOSE:
             return AppState.EXIT
+
         return self._self_app_state
 
     def update(self) -> AppState:
-        """Update screen logic."""
+        """Automatically continue after a short delay."""
+        elapsed = time.monotonic() - self._started_at
+
+        if elapsed >= AUTO_CONTINUE_DELAY:
+            return AppState.GAME
+
         return self._self_app_state
 
     def render(self) -> AppState:
-        """Render the level complete screen."""
+        """Render the level complete screen and countdown."""
         self.graphics.fill(BLACK)
         self.graphics.set_layer_order(["main"])
 
         for abs_rect in self._cache.values():
-            # Draw yellow rectangle.
             self.graphics.draw_rectangle(
                 x=abs_rect.x,
                 y=abs_rect.y,
@@ -59,7 +79,6 @@ class LevelCompleteScreen(Screen):
                 color=YELLOW,
             )
 
-            # Draw centered text.
             if abs_rect.text is not None:
                 self.graphics.draw_text(
                     text=abs_rect.text.text,
@@ -69,6 +88,31 @@ class LevelCompleteScreen(Screen):
                     spacing=abs_rect.text.spacing,
                     scale=abs_rect.text.scale,
                 )
+
+        elapsed = time.monotonic() - self._started_at
+        remaining = max(
+            1,
+            math.ceil(AUTO_CONTINUE_DELAY - elapsed),
+        )
+
+        hint = f"NEXT LEVEL IN {remaining} - ENTER TO CONTINUE"
+
+        scale = NORMAL_TEXT_SCALE
+        spacing = scale
+
+        text_width = (
+            len(hint) * 5 * scale
+            + max(0, len(hint) - 1) * spacing
+        )
+
+        self.graphics.draw_text(
+            text=hint,
+            x=(self._width - text_width) // 2,
+            y=int(self._height * 0.64),
+            color=GRAY,
+            spacing=spacing,
+            scale=scale,
+        )
 
         self.graphics.refresh()
         return self._self_app_state

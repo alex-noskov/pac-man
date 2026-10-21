@@ -41,7 +41,6 @@ Useful development commands:
 
 ```sh
 make debug        # run with pdb
-make test         # run the unittest suite
 make lint         # flake8 + mypy checks required by the subject
 make lint-strict  # stricter mypy validation
 make validate     # tests + lint

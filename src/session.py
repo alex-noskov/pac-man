@@ -365,10 +365,7 @@ class GameSession:
             self.power_pellets.remove(cell)
             self.score += self.config.points_per_super_pacgum
             self.power_remaining = self.config.power_duration
-        if (
-            not self.pellets
-            and not self.power_pellets
-        ):
+        if not self.pellets:
             self.state = AppState.LEVEL_COMPLETE
 
     def update(
