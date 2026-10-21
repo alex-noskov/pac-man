@@ -22,12 +22,10 @@ lint-strict:
 	$(UV) mypy . --strict --ignore-missing-imports
 
 clean:
-	rm -rf __pycache__ .mypy_cache .pytest_cache
+	rm -rf __pycache__ .mypy_cache .pytest_cache .uv-cache build
 	find src -type d -name '__pycache__' -prune -exec rm -rf {} +
 
 package:
 	$(UV) python package.py
 
-validate: test lint
-
-.PHONY: install run debug test lint lint-strict clean package validate
+.PHONY: install run debug lint lint-strict clean package

@@ -1,5 +1,11 @@
 from ..models import AppState
-from .layout import BLACK, NORMAL_TEXT_SCALE, WHITE, YELLOW
+from .layout import (
+    BLACK,
+    NORMAL_TEXT_SCALE,
+    WHITE,
+    YELLOW,
+    responsive_scale,
+)
 from .events import Event, EventType
 from .graphics import Graphics
 from .layout import AbsoluteRect, Layout
@@ -110,18 +116,29 @@ class InstructionsScreen(Screen):
             widthp=100,
             heightp=2,
             name="BACK_INFO",
-            text="press esc to go back to main menue",
+            text="press esc to go back to main menu",
         )
         self.layout.center_rect_x("BACK_INFO")
 
     def _cache_abs_layout(self) -> None:
         """Cache pixel geometry and text colors for the instruction labels."""
+        instruction_scale = responsive_scale(
+            self._width,
+            self._height,
+            NORMAL_TEXT_SCALE,
+        )
+
         for name in self.layout.get_rect_names():
+            scale = (
+                NORMAL_TEXT_SCALE
+                if name == "BACK_INFO"
+                else instruction_scale
+            )
             abs_rect = self.layout.get_rect_absolute(
                 name,
                 self._width,
                 self._height,
-                NORMAL_TEXT_SCALE,
+                scale,
             )
             if abs_rect is None:
                 continue

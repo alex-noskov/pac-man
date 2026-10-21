@@ -12,20 +12,23 @@ Menu: Up/Down or W/S to select, Enter to confirm. Navigation is keyboard-only.
 Movement: arrow keys or WASD.
 Pause: Esc or P; Enter resumes. Pause menu can return to the main menu.
 Close the window or choose Exit in the main menu to quit.
-Eat dots to complete levels, avoid ghosts, and use power pellets to eat ghosts.
+Eat all normal pacgums to complete a level. Power pellets are optional and make
+ghosts edible for a short time.
+After level completion, Enter starts the next level immediately; otherwise the
+next level starts automatically after 3 seconds.
 After victory or defeat, enter a name (10 alphanumeric/space characters max)
 and confirm with Enter to save the score.
 
 EVALUATION OPTIONS
 C toggles cheat controls. With cheats enabled: I toggles invincibility,
-N skips a level, F freezes ghosts, L adds a life, B toggles increased speed,
-V activates power. Main menu also provides instructions and top ten highscores.
+N completes the current level, F freezes ghosts, L adds a life,
+B toggles increased speed, and V activates power.
+The main menu also provides instructions and the Top 10 highscores.
 
 CONFIGURATION
 Edit config.json or pass another .json file. Lines beginning with # are ignored.
 Set levels (array of level_number/width/height), pacgum, seed, level_max_time,
-lives, window_width, window_height,
-player_speed, ghost_speed (2 cells/second by default for all four ghosts),
+lives, window_width, window_height, player_speed, ghost_speed,
 points_per_pacgum, points_per_super_pacgum, points_per_ghost, and
 highscore_filename. Invalid values use safe defaults with diagnostic messages.
 Keep the configured highscore location writable to persist scores.

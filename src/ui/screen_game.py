@@ -27,6 +27,7 @@ from .layout import (
     PAUSE_BACKGROUND,
     WALLS_COLOR,
     COLOR_42,
+    responsive_scale,
 )
 
 from .events import Event, EventType
@@ -145,14 +146,20 @@ class GameScreen(Screen):
         scale: int = NORMAL_TEXT_SCALE,
     ) -> None:
         """Draw centered text using a fixed font size."""
-        width, _ = self.graphics.get_window_size()
+        width, height = self.graphics.get_window_size()
+        scale = responsive_scale(width, height, scale)
+        spacing = scale
+        text_width = (
+            len(text) * 5 * scale
+            + max(0, len(text) - 1) * spacing
+        )
         self.graphics.draw_text(
             text.upper(),
-            max(8, (width - len(text) * 6 * scale) // 2),
+            max(8, (width - text_width) // 2),
             y,
             color,
             scale=scale,
-            spacing=scale,
+            spacing=spacing,
         )
 
     def render(self) -> AppState:
@@ -271,7 +278,11 @@ class GameScreen(Screen):
                 layer='actors',
             )
 
-        scale = HUD_TEXT_SCALE
+        scale = responsive_scale(
+            width,
+            height,
+            HUD_TEXT_SCALE,
+        )
         spacing = scale
         x = left
         y = 24
@@ -351,14 +362,19 @@ class GameScreen(Screen):
                 PAUSE_BACKGROUND,
                 layer='actors',
             )
+            pause_scale = responsive_scale(
+                width,
+                height,
+                NORMAL_TEXT_SCALE,
+            )
             for index, label in enumerate(('RESUME', 'MAIN MENU')):
                 g.draw_text(
                     ('> ' if index == self._pause_selected else '  ') + label,
                     width // 3,
                     height // 3 + 40 + index * 40,
                     YELLOW,
-                    scale=NORMAL_TEXT_SCALE,
-                    spacing=NORMAL_TEXT_SCALE,
+                    scale=pause_scale,
+                    spacing=pause_scale,
                     layer='actors',
                 )
 

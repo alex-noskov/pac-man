@@ -7,11 +7,12 @@
 | Corner targets are not directly reachable | Ghost or power-pellet placement could be invalid | Select reachable cells nearest the four geometric corners |
 | Invalid or incomplete configuration | Startup failure or unsafe gameplay values | Validate each setting, use safe defaults, ignore unknown keys, and report clean messages |
 | Large configured pacgum count | Sampling beyond maze capacity | Clamp requested count to available reachable cells |
-| Low frame rate / large frame delta | Actors could skip turns, pellets or collisions | Subdivide simulation time and use swept collision detection |
+| Low frame rate / large frame delta | Actors could skip turns, pellets, or collisions | Subdivide simulation time and use swept collision detection |
 | Immediate repeated deaths after respawn | Lives could disappear in consecutive frames | Reset positions and use a short respawn grace period |
-| Highscore file is missing/corrupt/unwritable | Crash or data loss | Validate loaded rows, recover cleanly, and save with atomic replacement |
+| Highscore file is missing, corrupt, or unwritable | Crash or data loss | Validate loaded rows, recover cleanly, and save with atomic replacement |
 | Native MLX callback raises an exception | Crash across the C callback boundary | Capture callback failures and release native resources safely |
-| Display smaller than configured window | UI may not fit | Fit requested window dimensions to the actual display |
-| Evaluator changes gameplay values | Hidden hard-coded assumptions may appear | Keep speeds, score values, timer, lives, seed and other gameplay settings configuration-driven |
+| Display smaller than configured window | UI may not fit | Fit requested dimensions to the actual display |
+| Very large window makes bitmap text too small relative to the UI | Poor readability | Use shared responsive text scaling from the reference window size |
+| Evaluator changes gameplay values | Hidden hard-coded assumptions may appear | Keep speeds, score values, timer, lives, seed, and other gameplay settings configuration-driven |
 | External public-platform upload is forgotten | Mandatory delivery requirement may be incomplete | Confirm the final uploaded build and launch it from the platform before defense |
-| Last-minute changes invalidate evidence | Tests/docs may no longer reflect submitted code | Run the final acceptance checklist after the last commit |
+| Last-minute changes invalidate documentation or behavior | Submitted evidence may no longer match the code | Run lint/type checks, packaging, and the final manual acceptance checklist after the last change |

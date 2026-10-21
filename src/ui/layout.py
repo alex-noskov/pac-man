@@ -38,6 +38,22 @@ HUD_TEXT_SCALE = 2
 AUTO_CONTINUE_DELAY = 3.0
 
 
+def responsive_scale(
+    width: int,
+    height: int,
+    base_scale: int,
+) -> int:
+    """Scale text smoothly from the 1280x800 reference window."""
+    width_ratio = width / 1280
+    height_ratio = height / 800
+    ratio = min(width_ratio, height_ratio)
+
+    return max(
+        base_scale,
+        int(base_scale * ratio + 0.5),
+    )
+
+
 class AbsoluteText:
     """Store text with pixel placement, glyph scale, spacing, and color."""
 

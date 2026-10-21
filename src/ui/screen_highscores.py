@@ -6,6 +6,7 @@ from .layout import (
     TITLE_TEXT_SCALE,
     WHITE,
     YELLOW,
+    responsive_scale,
 )
 from .events import Event, EventType
 from .graphics import Graphics
@@ -71,14 +72,23 @@ class HighscoresScreen(Screen):
             for index, entry in enumerate(entries)
         ] or ['NO HIGHSCORES YET']
         for index, text in enumerate(rows):
-            scale = NORMAL_TEXT_SCALE
+            scale = responsive_scale(
+                self._width,
+                self._height,
+                NORMAL_TEXT_SCALE,
+            )
+            spacing = scale
+            text_width = (
+                len(text) * 5 * scale
+                + max(0, len(text) - 1) * spacing
+            )
             self.graphics.draw_text(
                 text,
-                max(10, (self._width - len(text) * 6 * scale) // 2),
+                max(10, (self._width - text_width) // 2),
                 self._height // 4 + index * self._height // 18,
                 WHITE,
                 scale=scale,
-                spacing=scale,
+                spacing=spacing,
             )
         if self.store is not None and self.store.error:
             self.graphics.draw_text(
@@ -86,8 +96,16 @@ class HighscoresScreen(Screen):
                 10,
                 self._height * 9 // 10,
                 YELLOW,
-                scale=NORMAL_TEXT_SCALE,
-                spacing=NORMAL_TEXT_SCALE,
+                scale=responsive_scale(
+                    self._width,
+                    self._height,
+                    NORMAL_TEXT_SCALE,
+                ),
+                spacing=responsive_scale(
+                    self._width,
+                    self._height,
+                    NORMAL_TEXT_SCALE,
+                ),
             )
         self.graphics.refresh()
         return self._self_app_state
@@ -112,7 +130,7 @@ class HighscoresScreen(Screen):
             widthp=100,
             heightp=2,
             name="BACK_INFO",
-            text="press esc to go back to main menue",
+            text="press esc to go back to main menu",
         )
         self.layout.center_rect_x("BACK_INFO")
 
@@ -120,7 +138,11 @@ class HighscoresScreen(Screen):
         """Cache pixel geometry and text colors for the static labels."""
         for name in ("TITLE", "BACK_INFO"):
             scale = (
-                TITLE_TEXT_SCALE
+                responsive_scale(
+                    self._width,
+                    self._height,
+                    TITLE_TEXT_SCALE,
+                )
                 if name == 'TITLE'
                 else NORMAL_TEXT_SCALE
             )

@@ -8,6 +8,7 @@ from .layout import (
     PURPLE,
     WHITE,
     YELLOW,
+    responsive_scale,
 )
 from .events import Event, EventType
 from .graphics import Graphics
@@ -132,7 +133,11 @@ class MainMenuScreen(Screen):
         if self.store is not None and self.store.entries:
             best = self.store.entries[0]
             text = f"BEST {best['name'].upper()} {best['score']}"
-            scale = NORMAL_TEXT_SCALE
+            scale = responsive_scale(
+                self._width,
+                self._height,
+                NORMAL_TEXT_SCALE,
+            )
             spacing = scale
 
             text_width = (
@@ -195,12 +200,18 @@ class MainMenuScreen(Screen):
 
     def _cache_abs_layout(self) -> None:
         """Cache pixel geometry with shared button scale and default colors."""
+        button_scale = responsive_scale(
+            self._width,
+            self._height,
+            NORMAL_TEXT_SCALE,
+        )
+
         for button_name, _, _ in self._buttons:
             abs_rect = self.layout.get_rect_absolute(
                 button_name,
                 self._width,
                 self._height,
-                NORMAL_TEXT_SCALE,
+                button_scale,
             )
             if abs_rect is None:
                 continue

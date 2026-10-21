@@ -15,8 +15,8 @@ random seeds.
 
 ## Instructions
 
-The project currently targets **Python 3.12 or 3.13 on Linux**. A working X11 or
-XWayland graphical session is required by the supplied MLX build.
+The project targets **Python 3.12 or 3.13 on Linux**. A working X11 or XWayland
+graphical session is required by the supplied MLX build.
 
 Install dependencies and run the game from the repository root:
 
@@ -41,9 +41,8 @@ Useful development commands:
 
 ```sh
 make debug        # run with pdb
-make lint         # flake8 + mypy checks required by the subject
+make lint         # flake8 + mandatory mypy checks
 make lint-strict  # stricter mypy validation
-make validate     # tests + lint
 make clean        # remove generated caches
 make package      # build the standalone Linux package
 ```
@@ -60,7 +59,7 @@ an unhandled traceback.
 | Gameplay | Arrow keys or WASD | Move / queue a turn |
 | Gameplay | Esc or P | Pause |
 | Pause | Up/Down, Enter | Resume or return to main menu |
-| Level complete | Enter | Start the next level |
+| Level complete | Enter | Start the next level immediately; otherwise it starts automatically after 3 seconds |
 | Other screens | Esc | Return to main menu |
 | Victory / Game Over | Letters, digits, Space, Backspace | Edit player name |
 | Victory / Game Over | Enter | Save score and return to menu |
@@ -123,6 +122,10 @@ Scores are sorted in descending order. Saving uses a temporary file followed by
 atomic replacement so that an existing highscore file is preserved if writing
 fails.
 
+JSON was chosen because the highscore data is small, human-readable, portable,
+and requires no external database while still allowing validation and atomic
+persistence.
+
 ## Maze Generation
 
 The project does not implement its own maze generator. `src/maze.py` adapts the
@@ -154,12 +157,16 @@ choose a neighbor that increases it. Randomness only resolves equal choices.
 
 Pause freezes gameplay movement and timers. A lost life respawns actors without
 resetting the current score or collected pellets. Score and remaining lives carry
-over between levels. The game ends on the final completed level, when all lives are
-lost, or when the level timer expires.
+over between levels. A level completes when all normal pacgums have been eaten;
+power pellets remain optional collectibles. The game ends on the final completed
+level, when all lives are lost, or when the level timer expires.
+
+The Level Complete screen advances automatically after three seconds, while Enter
+allows immediate continuation.
 
 The UI uses MLX image layers: the maze can remain cached while actors, pellets, HUD,
-and overlays are redrawn independently. Fixed bitmap-font scales and UI colors are
-kept in `src/ui/layout.py`.
+and overlays are redrawn independently. Bitmap text uses shared responsive scaling
+for larger windows while preserving a readable minimum size.
 
 ## General Software Architecture
 
@@ -188,23 +195,26 @@ Main responsibilities:
 - `src/ui/` - screens, input events, layout, bitmap text, rendering, and the MLX
   boundary.
 
-This separation keeps gameplay testable without opening a graphical window.
+This separation keeps gameplay logic independent of the graphical layer.
 
 ## Project Management
 
-Project planning, progress, design decisions, risks, team responsibilities,
-bug tracking, and acceptance testing are documented in
+The project was managed by dividing work by subsystem, tracking milestones and
+actual progress, recording important design decisions and risks, documenting bugs
+and fixes, and validating the finished features against an acceptance plan.
+
+Detailed project-management records are available in
 [`project_management/`](project_management/README.md).
 
 ## Packaging
 
 `make package` builds a standalone Linux distribution with PyInstaller under
-`dist/pac-man/`. The packaged directory includes the executable and required
-support files. Detailed build and verification instructions are in
-[`PACKAGING.md`](PACKAGING.md).
+`dist/pac-man/`. The complete generated directory must stay together when copied or
+uploaded. Minimal controls, options, and configuration instructions are included in
+`INSTRUCTIONS.txt`.
 
 Publishing the verified build to the required public gaming platform is a separate
-release step and should be completed by the project owners before evaluation.
+release step and must be completed before evaluation.
 
 ## Resources
 
@@ -212,15 +222,14 @@ release step and should be completed by the project owners before evaluation.
 - Supplied MLX 2.2 library and its documentation/source.
 - Supplied `mazegenerator` 2.1.0 package interface.
 - [Python documentation](https://docs.python.org/3/).
-- [Python `unittest`](https://docs.python.org/3/library/unittest.html).
 - [Pydantic documentation](https://docs.pydantic.dev/).
 - [mypy documentation](https://mypy.readthedocs.io/).
 - [PyInstaller documentation](https://pyinstaller.org/).
 
 AI assistance was used during the completion/review stage to compare the project
 against the subject, analyze existing code and runtime failures, help implement and
-refactor gameplay/persistence/native-resource handling, design regression tests,
-prepare packaging, and draft technical documentation. Generated suggestions were
-reviewed against the source code and validated with automated tests and native runs;
-the project owners remain responsible for understanding and defending the final
+refactor gameplay/persistence/native-resource handling, prepare verification
+scenarios, review packaging, and draft technical documentation. Generated
+suggestions were reviewed against the source code and manually validated; the
+project owners remain responsible for understanding and defending the final
 implementation.

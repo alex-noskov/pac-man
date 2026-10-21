@@ -13,6 +13,7 @@ from .layout import (
     TITLE_TEXT_SCALE,
     YELLOW,
     AUTO_CONTINUE_DELAY,
+    responsive_scale,
 )
 from .screen_base import Screen
 
@@ -97,7 +98,11 @@ class LevelCompleteScreen(Screen):
 
         hint = f"NEXT LEVEL IN {remaining} - ENTER TO CONTINUE"
 
-        scale = NORMAL_TEXT_SCALE
+        scale = responsive_scale(
+            self._width,
+            self._height,
+            NORMAL_TEXT_SCALE,
+        )
         spacing = scale
 
         text_width = (
@@ -137,7 +142,11 @@ class LevelCompleteScreen(Screen):
             "LEVEL_COMPLETE",
             self._width,
             self._height,
-            TITLE_TEXT_SCALE,
+            responsive_scale(
+                self._width,
+                self._height,
+                TITLE_TEXT_SCALE,
+            ),
         )
         if abs_rect is None:
             return
