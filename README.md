@@ -15,23 +15,37 @@ random seeds.
 
 ## Instructions
 
-The project targets **Python 3.12 or 3.13 on Linux**. A working X11 or XWayland
-graphical session is required by the supplied MLX build.
+### Requirements
 
-Install dependencies and run the game from the repository root:
+The repository is configured for:
+
+- Linux;
+- Python **3.12 or 3.13**;
+- `uv`;
+- `make`;
+- an X11 or XWayland graphical session required by the supplied MLX build.
+
+Install the locked dependencies from the repository root:
 
 ```sh
 make install
+```
+
+Run the game:
+
+```sh
 make run
 ```
 
-The required command-line form is:
+The required direct command-line form is:
 
 ```sh
 python3 pac-man.py config.json
 ```
 
-A different configuration can be used with:
+The launcher accepts exactly one `.json` configuration path.
+
+A different configuration file can be used with:
 
 ```sh
 make run CONFIG=custom.json
@@ -40,29 +54,37 @@ make run CONFIG=custom.json
 Useful development commands:
 
 ```sh
-make debug        # run with pdb
+make debug        # run through Python's pdb debugger
 make lint         # flake8 + mandatory mypy checks
-make lint-strict  # stricter mypy validation
-make clean        # remove generated caches
-make package      # build the standalone Linux package
+make lint-strict  # flake8 + mypy --strict
+make clean        # remove generated caches/build files
+make package      # build the standalone Linux distribution
 ```
 
-The launcher accepts exactly one `.json` configuration file. Invalid or missing
-configuration values are handled with clear messages and safe defaults rather than
-an unhandled traceback.
+Missing files, malformed configuration data, invalid field values, and other
+expected input errors are handled with diagnostic messages and safe defaults
+instead of an unhandled traceback.
 
 ### Controls
 
 | Context | Keys | Action |
 | --- | --- | --- |
-| Menus | Up/Down or W/S, Enter | Select and confirm |
-| Gameplay | Arrow keys or WASD | Move / queue a turn |
+| Main menu | Up/Down or W/S | Change selection |
+| Main menu | Enter | Confirm selection |
+| Gameplay | Arrow keys or WASD | Move / queue the next turn |
 | Gameplay | Esc or P | Pause |
-| Pause | Up/Down, Enter | Resume or return to main menu |
-| Level complete | Enter | Start the next level immediately; otherwise it starts automatically after 3 seconds |
-| Other screens | Esc | Return to main menu |
+| Pause menu | Up/Down or W/S | Select Resume or Main Menu |
+| Pause menu | Enter | Confirm selection |
+| Pause menu | Esc or P | Resume immediately |
+| Level complete | Enter | Start the next level immediately |
+| Highscores / Instructions | Esc | Return to the main menu |
 | Victory / Game Over | Letters, digits, Space, Backspace | Edit player name |
-| Victory / Game Over | Enter | Save score and return to menu |
+| Victory / Game Over | Enter | Save score and return to the main menu |
+| Victory / Game Over | Esc | Return to the main menu without saving |
+| Any screen | Window close button | Exit the application |
+
+If no key is pressed on the Level Complete screen, the next level starts
+automatically after three seconds.
 
 ### Evaluation cheats
 
@@ -77,39 +99,81 @@ Press **C** during gameplay to enable or disable cheat controls.
 | B | Toggle double player speed |
 | V | Activate the normal power-pellet state |
 
-Disabling cheat mode also clears invincibility, ghost freeze, and the speed
-multiplier.
+Cheat actions only apply while cheat mode is enabled. Disabling cheat mode also
+clears invincibility, ghost freeze, and the speed multiplier.
 
 ## Configuration
 
-The configuration is JSON and also accepts whole comment lines beginning with `#`.
-Unknown keys are ignored. Missing or invalid fields fall back independently to
-validated defaults.
+The configuration file is JSON. Whole lines whose first non-whitespace character
+is `#` are ignored before JSON parsing.
 
-| Key | Default | Meaning |
+Unknown keys are ignored. Missing or invalid top-level fields fall back
+independently to validated parser defaults. If the complete file cannot be read or
+parsed, the game continues with the full default configuration.
+
+### Parser defaults and accepted values
+
+| Key | Parser default | Validation / meaning |
 | --- | --- | --- |
-| `highscore_filename` | `highscores.json` | Persistent score file |
-| `levels` | 10 levels | Maze definitions; short lists are padded to ten levels |
-| `width`, `height` | 15x15 up to 35x35 | Maze dimensions, accepted range 7..40 |
-| `level_number` | `1` | Optional non-negative level label |
-| `lives` | `3` | Starting lives |
-| `pacgum` | `0` | `0` fills all eligible reachable corridors; positive values request a count |
-| `points_per_pacgum` | `10` | Score for a normal pellet |
-| `points_per_super_pacgum` | `50` | Score for a power pellet |
-| `points_per_ghost` | `200` | Score for an edible ghost |
-| `seed` | `42` | Fixed positive seed for the first level |
-| `level_max_time` | `90` | Level time limit in seconds |
-| `window_width` | `1280` | Requested window width |
-| `window_height` | `800` | Requested window height |
-| `power_duration` | `8` | Edible-ghost duration in seconds |
-| `ghost_respawn_time` | `5` | Delay before an eaten ghost returns |
-| `player_speed` | `5` | Player speed in cells per second |
-| `ghost_speed` | `2` | Shared ghost speed in cells per second |
+| `highscore_filename` | `highscores.json` | Non-empty UTF-8 filesystem path without NUL characters |
+| `levels` | 10 predefined levels | Array of level objects; lists shorter than 10 are padded with default levels |
+| `level_number` | `1` for an individual level | Non-negative integer label |
+| `width` | Defined by the default level list | Integer from `7` to `40` |
+| `height` | Defined by the default level list | Integer from `7` to `40` |
+| `lives` | `3` | Integer from `1` to `10` |
+| `pacgum` | `0` | `0` fills all eligible reachable cells; positive values request a count; values above `1600` are clamped to `1600` |
+| `points_per_pacgum` | `10` | Positive integer |
+| `points_per_super_pacgum` | `50` | Positive integer |
+| `points_per_ghost` | `200` | Positive integer |
+| `seed` | `42` | Positive integer seed in `1..2147483647`; internally stored as a string |
+| `level_max_time` | `90` | Integer seconds in `1..500` |
+| `window_width` | `1280` | Integer pixels in `800..3840` |
+| `window_height` | `800` | Integer pixels in `600..2160` |
+| `power_duration` | `8` | Finite number of seconds in `0.1..120` |
+| `ghost_respawn_time` | `5` | Finite number of seconds in `0.1..120` |
+| `player_speed` | `5` | Finite cells/second value in `0.1..30` |
+| `ghost_speed` | `2` | Finite cells/second value in `0.1..30` |
 
-The supplied `config.json` contains ten custom maze sizes from `14x14` to `34x34`
-and uses the gameplay values shown above. If the requested window is larger than
-the available display, the MLX wrapper caps it to the detected screen size with a
-small margin.
+The parser's ten default maze dimensions are:
+
+```text
+15x15
+20x18
+20x20
+25x20
+25x25
+30x25
+30x28
+32x30
+35x30
+35x35
+```
+
+The supplied `config.json` intentionally overrides those parser defaults with ten
+custom level definitions:
+
+```text
+14x14
+19x17
+19x19
+24x19
+24x24
+29x24
+29x27
+31x29
+34x29
+34x34
+```
+
+Its `level_number` values are `0..9`. `level_number` is a validated level label;
+actual progression and the HUD use the level's position in the configured list.
+
+The three scoring values have no arbitrary application-level upper limit. They
+must simply be positive integers, and Python integer arithmetic is used for the
+accumulated score.
+
+If a requested window is larger than the available display, the MLX wrapper caps
+the actual window to the detected screen size with a small margin.
 
 ## Highscore
 
@@ -128,20 +192,29 @@ persistence.
 
 ## Maze Generation
 
-The project does not implement its own maze generator. `src/maze.py` adapts the
-assigned package directly:
+The project does **not** implement its own maze generator.
+
+`src/maze.py` imports and adapts the assigned `mazegenerator` package directly:
 
 ```python
-MazeGenerator((width, height), perfect=False, seed=seed)
+MazeGenerator((width, height), perfect=False, seed=int(seed))
 ```
 
-The returned maze is validated before gameplay. Pac-Man is placed at the nearest
-reachable cell to the maze center. Four ghosts and four power pellets use reachable
-corner positions, and normal pellets are placed only in the player's reachable
-component.
+The assigned package is used as supplied and is not modified.
 
-The first level uses the configured fixed seed. Subsequent levels use fresh random
-seeds. The assigned generator package is used as supplied and is not modified.
+After generation, the adapter validates the rectangular dimensions, wall-mask
+values, closed outer boundaries, and reciprocal walls between neighboring cells.
+
+Pac-Man is placed on the reachable cell nearest the geometric center of the maze.
+The four ghost spawn positions and the four power-pellet positions are chosen from
+reachable cells nearest the four corners. Normal pacgums are placed only in the
+player's reachable component, excluding the player start and power-pellet cells.
+
+The first level uses the configured fixed seed. Every later level generates a new
+positive random seed.
+
+If maze generation or validation fails, gameplay enters a recoverable error state
+instead of raising an uncaught exception.
 
 ## Implementation
 
@@ -208,18 +281,58 @@ Detailed project-management records are available in
 
 ## Packaging
 
-`make package` builds a standalone Linux distribution with PyInstaller under
-`dist/pac-man/`. The complete generated directory must stay together when copied or
-uploaded. Minimal controls, options, and configuration instructions are included in
-`INSTRUCTIONS.txt`.
+The repository contains `package.py` at its root. Run:
 
-Publishing the verified build to the required public gaming platform is a separate
-release step and must be completed before evaluation.
+```sh
+make package
+```
+
+Before building, the script validates these required inputs:
+
+- `config.json`;
+- `INSTRUCTIONS.txt`;
+- `mazegenerator-2.1.0-py3-none-any.whl`;
+- `mlx-2.2-py3-none-any.whl`;
+- `MLX-LICENSE.txt`.
+
+It then runs PyInstaller in `onedir` mode and creates:
+
+```text
+dist/pac-man/
+```
+
+After a successful build, the runtime support files copied beside the executable
+are:
+
+```text
+config.json
+INSTRUCTIONS.txt
+mazegenerator-2.1.0-py3-none-any.whl
+MLX-LICENSE.txt
+```
+
+The MLX wheel remains a source/build dependency; its installed runtime is collected
+by PyInstaller into the standalone distribution.
+
+The complete `dist/pac-man/` directory must stay together. Start the packaged game
+with:
+
+```sh
+./pac-man config.json
+```
+
+No Python installation is required to run the completed PyInstaller distribution.
+`INSTRUCTIONS.txt` provides minimal in-package controls, options, and configuration
+information.
+
+For evaluation, the verified packaged build must also be made available from an
+accepted public gaming platform such as Itch.io or Steam; a free unlisted/private
+build is sufficient.
 
 ## Resources
 
 - Pac-Man subject v1.5 - authoritative project specification.
-- Supplied MLX 2.2 library and its documentation/source.
+- Supplied `mlx-2.2-py3-none-any.whl` package and `MLX-LICENSE.txt`.
 - Supplied `mazegenerator` 2.1.0 package interface.
 - [Python documentation](https://docs.python.org/3/).
 - [Pydantic documentation](https://docs.pydantic.dev/).
