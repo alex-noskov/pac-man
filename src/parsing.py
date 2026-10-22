@@ -42,19 +42,39 @@ class Level(BaseModel):
 class Config(BaseModel):
     """Validated game settings with defaults safe for maze generation."""
 
-    model_config = ConfigDict(extra="ignore", validate_default=True)
+    model_config = ConfigDict(
+        extra="ignore",
+        validate_default=True,
+    )
 
     highscore_filename: str = "highscores.json"
     levels: list[Level] = Field(
         default_factory=lambda: [
-            Level.model_validate(level) for level in DEFAULT_LEVELS
+            Level.model_validate(level)
+            for level in DEFAULT_LEVELS
         ]
     )
-    lives: int = Field(default=3, ge=1, le=10)
-    pacgum: int = Field(default=0, ge=0)
-    points_per_pacgum: int = Field(default=10, ge=1, le=1000)
-    points_per_super_pacgum: int = Field(default=50, ge=10, le=3000)
-    points_per_ghost: int = Field(default=200, ge=15, le=5000)
+    lives: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+    )
+    pacgum: int = Field(
+        default=0,
+        ge=0,
+    )
+    points_per_pacgum: int = Field(
+        default=10,
+        ge=1,
+    )
+    points_per_super_pacgum: int = Field(
+        default=50,
+        ge=1,
+    )
+    points_per_ghost: int = Field(
+        default=200,
+        ge=1,
+    )
     window_width: int = Field(
         default=1280,
         ge=800,
@@ -66,15 +86,36 @@ class Config(BaseModel):
         le=2160,
     )
     seed: str = "42"
-    level_max_time: int = Field(default=90, ge=1, le=500)
-    power_duration: float = Field(default=8, ge=0.1, le=120,
-                                  allow_inf_nan=False)
-    ghost_respawn_time: float = Field(default=5, ge=0.1, le=120,
-                                      allow_inf_nan=False)
-    player_speed: float = Field(default=5, ge=0.1, le=30,
-                                allow_inf_nan=False)
-    ghost_speed: float = Field(default=2, ge=0.1, le=30,
-                               allow_inf_nan=False)
+
+    level_max_time: int = Field(
+        default=90,
+        ge=1,
+        le=500,
+    )
+    power_duration: float = Field(
+        default=8,
+        ge=0.1,
+        le=120,
+        allow_inf_nan=False,
+    )
+    ghost_respawn_time: float = Field(
+        default=5,
+        ge=0.1,
+        le=120,
+        allow_inf_nan=False,
+    )
+    player_speed: float = Field(
+        default=5,
+        ge=0.1,
+        le=30,
+        allow_inf_nan=False,
+    )
+    ghost_speed: float = Field(
+        default=2,
+        ge=0.1,
+        le=30,
+        allow_inf_nan=False,
+    )
 
     @field_validator('*', mode='before')
     @classmethod
